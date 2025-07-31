@@ -360,7 +360,7 @@ export default async function HomePage() {
     // Get main channel entry with complete modular blocks
     let mainEntry: NewsChannelEntry;
     try {
-      const entryFromCMS = await fetchNewsChannelWithModularBlocks('news_channel') as NewsChannelEntry;
+      const entryFromCMS = await fetchNewsChannelWithModularBlocks(process.env.ENTRYUID || 'blt0171967259c79e5c') as NewsChannelEntry;
       mainEntry = entryFromCMS || {
         title: "Channel 24 News",
         url: "https://channel24news.com",
