@@ -27,13 +27,13 @@ interface LinkField {
 }
 
 interface CategoryBlock {
-  json_rte: any; // JSON Rich Text Editor content
-  _metadata?: any;
+  json_rte: Record<string, unknown>; // JSON Rich Text Editor content
+  _metadata?: Record<string, unknown>;
 }
 
 interface ImageBlock {
   file: ContentstackAsset;
-  _metadata?: any;
+  _metadata?: Record<string, unknown>;
 }
 
 interface ModularBlock {
@@ -63,7 +63,7 @@ interface NewsChannelEntry {
   modular_blocks?: ModularBlock[];  // data_type: "blocks"
   taxonomies?: TaxonomyTerm[];      // data_type: "taxonomy"
   uid: string;
-  _metadata?: any;
+  _metadata?: Record<string, unknown>;
 }
 
 interface Author {
@@ -104,7 +104,7 @@ interface LiveWeatherTaxonomy {
 }
 
 // Component to render JSON RTE content
-function JsonRteRenderer({ content }: { content: any }) {
+function JsonRteRenderer({ content }: { content: Record<string, unknown> | string | null }) {
   if (!content) return null;
   
   try {
@@ -181,7 +181,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-blue-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-blue-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 1</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "text"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;text&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">📝 Title</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">Mandatory, Unique</p>
@@ -192,7 +192,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-green-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-green-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 2</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "text"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;text&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">🌐 URL</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">Optional</p>
@@ -203,7 +203,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-purple-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-purple-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 3</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "isodate"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;isodate&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">📅 Date</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">ISO Date Format</p>
@@ -216,7 +216,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-red-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-red-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 4</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "boolean"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;boolean&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">✅ Boolean</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">True/False</p>
@@ -229,7 +229,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-yellow-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-yellow-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 5</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "number"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;number&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">🔢 Number</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">Numeric Value</p>
@@ -240,7 +240,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-indigo-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-indigo-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 6</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "link"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;link&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">🔗 Link</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">Title + URL Object</p>
@@ -257,7 +257,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-pink-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-pink-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 7</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "file"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;file&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">📁 File</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">Asset with Metadata</p>
@@ -275,7 +275,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-teal-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-teal-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 8</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "reference"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;reference&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">🔗 Reference</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">To kasjmir_news</p>
@@ -290,7 +290,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-orange-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-orange-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 9</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "blocks"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;blocks&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">🧩 Modular Blocks</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">Category + Image Blocks</p>
@@ -305,7 +305,7 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         <div className="bg-white border-l-4 border-cyan-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-cyan-50">
           <div className="flex items-center space-x-3 mb-4">
             <span className="bg-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 10</span>
-            <span className="text-sm text-gray-500 font-medium">data_type: "taxonomy"</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: &quot;taxonomy&quot;</span>
           </div>
           <h3 className="font-bold text-xl text-gray-800 mb-2">🏷️ Taxonomies</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">live_weather taxonomy</p>
