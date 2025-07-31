@@ -162,143 +162,124 @@ function ModularBlocksRenderer({ blocks }: { blocks: ModularBlock[] }) {
   );
 }
 
-// Component to render taxonomy
-function TaxonomyRenderer({ taxonomies }: { taxonomies: TaxonomyTerm[] }) {
-  if (!taxonomies || taxonomies.length === 0) return null;
 
-  return (
-    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-      <h3 className="text-lg font-semibold text-blue-800 mb-3">🏷️ Live Weather Taxonomy</h3>
-      <div className="flex flex-wrap gap-2">
-        {taxonomies.map((term) => (
-          <span 
-            key={term.uid}
-            className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
-          >
-            {term.name}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // Component to display all schema fields explicitly
 function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
   return (
-    <section className="mb-12">
-      <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+    <section className="mb-16">
+      <h2 className="text-4xl font-bold text-gray-900 mb-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
         🎯 Complete Schema Implementation
       </h2>
-      <p className="text-center text-gray-600 mb-8">
+      <p className="text-center text-gray-600 mb-12 text-lg max-w-2xl mx-auto">
         Every field from your exported content type schema is displayed below
       </p>
       
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         
         {/* Field 1: Title (text, mandatory, unique) */}
-        <div className="bg-white border-l-4 border-blue-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold">FIELD 1</span>
-            <span className="text-sm text-gray-500">data_type: "text"</span>
+        <div className="bg-white border-l-4 border-blue-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-blue-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 1</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "text"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">📝 Title</h3>
-          <p className="text-sm text-gray-500 mb-2">Mandatory, Unique</p>
-          <p className="text-blue-600 font-medium">{entry.title}</p>
+          <h3 className="font-bold text-xl text-gray-800 mb-2">📝 Title</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">Mandatory, Unique</p>
+          <p className="text-blue-600 font-bold text-lg">{entry.title}</p>
         </div>
 
         {/* Field 2: URL (text) */}
-        <div className="bg-white border-l-4 border-green-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-bold">FIELD 2</span>
-            <span className="text-sm text-gray-500">data_type: "text"</span>
+        <div className="bg-white border-l-4 border-green-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-green-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 2</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "text"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">🌐 URL</h3>
-          <p className="text-sm text-gray-500 mb-2">Optional</p>
-          <p className="text-green-600 font-medium">{entry.url || 'Not set'}</p>
+          <h3 className="font-bold text-xl text-gray-800 mb-2">🌐 URL</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">Optional</p>
+          <p className="text-green-600 font-bold text-lg break-all">{entry.url || 'Not set'}</p>
         </div>
 
         {/* Field 3: Date (isodate) */}
-        <div className="bg-white border-l-4 border-purple-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-bold">FIELD 3</span>
-            <span className="text-sm text-gray-500">data_type: "isodate"</span>
+        <div className="bg-white border-l-4 border-purple-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-purple-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 3</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "isodate"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">📅 Date</h3>
-          <p className="text-sm text-gray-500 mb-2">ISO Date Format</p>
-          <p className="text-purple-600 font-medium">
+          <h3 className="font-bold text-xl text-gray-800 mb-2">📅 Date</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">ISO Date Format</p>
+          <p className="text-purple-600 font-bold text-lg">
             {entry.date ? new Date(entry.date).toLocaleDateString() : 'Not set'}
           </p>
         </div>
 
         {/* Field 4: Boolean (boolean) */}
-        <div className="bg-white border-l-4 border-red-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold">FIELD 4</span>
-            <span className="text-sm text-gray-500">data_type: "boolean"</span>
+        <div className="bg-white border-l-4 border-red-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-red-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 4</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "boolean"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">✅ Boolean</h3>
-          <p className="text-sm text-gray-500 mb-2">True/False</p>
-          <p className="text-red-600 font-medium">
+          <h3 className="font-bold text-xl text-gray-800 mb-2">✅ Boolean</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">True/False</p>
+          <p className="text-red-600 font-bold text-lg">
             {entry.boolean !== undefined ? (entry.boolean ? 'True' : 'False') : 'Not set'}
           </p>
         </div>
 
         {/* Field 5: Number (number) */}
-        <div className="bg-white border-l-4 border-yellow-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-bold">FIELD 5</span>
-            <span className="text-sm text-gray-500">data_type: "number"</span>
+        <div className="bg-white border-l-4 border-yellow-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-yellow-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 5</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "number"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">🔢 Number</h3>
-          <p className="text-sm text-gray-500 mb-2">Numeric Value</p>
-          <p className="text-yellow-600 font-medium">{entry.number || 'Not set'}</p>
+          <h3 className="font-bold text-xl text-gray-800 mb-2">🔢 Number</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">Numeric Value</p>
+          <p className="text-yellow-600 font-bold text-lg">{entry.number || 'Not set'}</p>
         </div>
 
         {/* Field 6: Link (link) */}
-        <div className="bg-white border-l-4 border-indigo-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-xs font-bold">FIELD 6</span>
-            <span className="text-sm text-gray-500">data_type: "link"</span>
+        <div className="bg-white border-l-4 border-indigo-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-indigo-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 6</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "link"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">🔗 Link</h3>
-          <p className="text-sm text-gray-500 mb-2">Title + URL Object</p>
+          <h3 className="font-bold text-xl text-gray-800 mb-2">🔗 Link</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">Title + URL Object</p>
           {entry.link ? (
-            <a href={entry.link.url} className="text-indigo-600 font-medium underline hover:text-indigo-800">
+            <a href={entry.link.url} className="text-indigo-600 font-bold text-lg underline hover:text-indigo-800 transition-colors duration-200">
               {entry.link.title}
             </a>
           ) : (
-            <p className="text-indigo-600 font-medium">Not set</p>
+            <p className="text-indigo-600 font-bold text-lg">Not set</p>
           )}
         </div>
 
         {/* Field 7: File (file) */}
-        <div className="bg-white border-l-4 border-pink-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-pink-100 text-pink-800 px-2 py-1 rounded text-xs font-bold">FIELD 7</span>
-            <span className="text-sm text-gray-500">data_type: "file"</span>
+        <div className="bg-white border-l-4 border-pink-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-pink-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 7</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "file"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">📁 File</h3>
-          <p className="text-sm text-gray-500 mb-2">Asset with Metadata</p>
+          <h3 className="font-bold text-xl text-gray-800 mb-2">📁 File</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">Asset with Metadata</p>
           {entry.file ? (
             <div>
-              <p className="text-pink-600 font-medium">{entry.file.title || entry.file.filename}</p>
-              <a href={entry.file.url} className="text-xs text-pink-500 underline">Download</a>
+              <p className="text-pink-600 font-bold text-lg">{entry.file.title || entry.file.filename}</p>
+              <a href={entry.file.url} className="text-xs text-pink-500 underline hover:text-pink-700 transition-colors duration-200">Download</a>
             </div>
           ) : (
-            <p className="text-pink-600 font-medium">Not set</p>
+            <p className="text-pink-600 font-bold text-lg">Not set</p>
           )}
         </div>
 
         {/* Field 8: Reference (reference) */}
-        <div className="bg-white border-l-4 border-teal-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded text-xs font-bold">FIELD 8</span>
-            <span className="text-sm text-gray-500">data_type: "reference"</span>
+        <div className="bg-white border-l-4 border-teal-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-teal-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 8</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "reference"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">🔗 Reference</h3>
-          <p className="text-sm text-gray-500 mb-2">To kasjmir_news</p>
-          <p className="text-teal-600 font-medium">
+          <h3 className="font-bold text-xl text-gray-800 mb-2">🔗 Reference</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">To kasjmir_news</p>
+          <p className="text-teal-600 font-bold text-lg">
             {entry.reference && entry.reference.length > 0 
               ? `${entry.reference.length} item(s)` 
               : 'Not set'}
@@ -306,14 +287,14 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         </div>
 
         {/* Field 9: Modular Blocks (blocks) */}
-        <div className="bg-white border-l-4 border-orange-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-bold">FIELD 9</span>
-            <span className="text-sm text-gray-500">data_type: "blocks"</span>
+        <div className="bg-white border-l-4 border-orange-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-orange-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 9</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "blocks"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">🧩 Modular Blocks</h3>
-          <p className="text-sm text-gray-500 mb-2">Category + Image Blocks</p>
-          <p className="text-orange-600 font-medium">
+          <h3 className="font-bold text-xl text-gray-800 mb-2">🧩 Modular Blocks</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">Category + Image Blocks</p>
+          <p className="text-orange-600 font-bold text-lg">
             {entry.modular_blocks && entry.modular_blocks.length > 0 
               ? `${entry.modular_blocks.length} block(s)` 
               : 'Not set'}
@@ -321,14 +302,14 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         </div>
 
         {/* Field 10: Taxonomies (taxonomy) */}
-        <div className="bg-white border-l-4 border-cyan-500 p-6 rounded-lg shadow-md">
-          <div className="flex items-center space-x-3 mb-3">
-            <span className="bg-cyan-100 text-cyan-800 px-2 py-1 rounded text-xs font-bold">FIELD 10</span>
-            <span className="text-sm text-gray-500">data_type: "taxonomy"</span>
+        <div className="bg-white border-l-4 border-cyan-500 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gradient-to-br from-white to-cyan-50">
+          <div className="flex items-center space-x-3 mb-4">
+            <span className="bg-cyan-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">FIELD 10</span>
+            <span className="text-sm text-gray-500 font-medium">data_type: "taxonomy"</span>
           </div>
-          <h3 className="font-semibold text-lg text-gray-800">🏷️ Taxonomies</h3>
-          <p className="text-sm text-gray-500 mb-2">live_weather taxonomy</p>
-          <p className="text-cyan-600 font-medium">
+          <h3 className="font-bold text-xl text-gray-800 mb-2">🏷️ Taxonomies</h3>
+          <p className="text-sm text-gray-500 mb-3 font-medium">live_weather taxonomy</p>
+          <p className="text-cyan-600 font-bold text-lg">
             {entry.taxonomies && entry.taxonomies.length > 0 
               ? `${entry.taxonomies.length} term(s)` 
               : 'Sample terms displayed'}
@@ -336,13 +317,37 @@ function SchemaFieldsDisplay({ entry }: { entry: NewsChannelEntry }) {
         </div>
       </div>
 
-      <div className="mt-8 text-center">
-        <div className="inline-flex items-center bg-green-50 border border-green-200 rounded-lg px-6 py-3">
-          <span className="text-green-600 font-semibold">✅ All 10 Fields Implemented</span>
-          <span className="ml-3 text-green-500 text-sm">Complete Schema Coverage</span>
+      <div className="mt-12 text-center">
+        <div className="inline-flex items-center bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl px-8 py-4 shadow-lg">
+          <span className="text-green-700 font-bold text-lg">✅ All 10 Fields Implemented</span>
+          <span className="ml-4 text-green-600 text-sm font-semibold">Complete Schema Coverage</span>
         </div>
       </div>
     </section>
+  );
+}
+
+// Component to render taxonomy
+function TaxonomyRenderer({ taxonomies }: { taxonomies: TaxonomyTerm[] }) {
+  if (!taxonomies || taxonomies.length === 0) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-8 shadow-lg">
+      <h3 className="text-2xl font-bold text-blue-800 mb-6 flex items-center">
+        <span className="mr-3">🏷️</span>
+        Live Weather Taxonomy
+      </h3>
+      <div className="flex flex-wrap gap-3">
+        {taxonomies.map((term) => (
+          <span 
+            key={term.uid}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            {term.name}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -482,51 +487,52 @@ export default async function HomePage() {
         ];
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         
         {/* Enhanced Header with all field types */}
-        <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-          <div className="max-w-6xl mx-auto px-6 py-8">
+        <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-black opacity-10"></div>
+          <div className="relative max-w-6xl mx-auto px-6 py-12">
             <div className="text-center">
-              <h1 className="text-4xl font-bold mb-2">
+              <h1 className="text-5xl font-bold mb-4 drop-shadow-lg">
                 {mainEntry.title}
               </h1>
-              <p className="text-blue-100 mb-4">
+              <p className="text-blue-100 mb-8 text-xl">
                 Channel {mainEntry.number} • Your trusted news source
               </p>
               
               {/* Display all field types */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 text-sm">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8 text-sm">
                 {mainEntry.url && (
-                  <div className="bg-blue-700 bg-opacity-50 rounded-lg p-3">
-                    <div className="font-semibold">🌐 Website</div>
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-30 hover:bg-opacity-30 transition-all duration-300">
+                    <div className="font-bold text-lg mb-1">🌐 Website</div>
                     <div className="text-blue-100">{mainEntry.url}</div>
                   </div>
                 )}
                 {mainEntry.date && (
-                  <div className="bg-blue-700 bg-opacity-50 rounded-lg p-3">
-                    <div className="font-semibold">📅 Date</div>
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-30 hover:bg-opacity-30 transition-all duration-300">
+                    <div className="font-bold text-lg mb-1">📅 Date</div>
                     <div className="text-blue-100">{new Date(mainEntry.date).toLocaleDateString()}</div>
                   </div>
                 )}
                 {mainEntry.boolean !== undefined && (
-                  <div className="bg-blue-700 bg-opacity-50 rounded-lg p-3">
-                    <div className="font-semibold">✅ Live Status</div>
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-30 hover:bg-opacity-30 transition-all duration-300">
+                    <div className="font-bold text-lg mb-1">✅ Live Status</div>
                     <div className="text-blue-100">{mainEntry.boolean ? 'Online' : 'Offline'}</div>
                   </div>
                 )}
                 {mainEntry.link && (
-                  <div className="bg-blue-700 bg-opacity-50 rounded-lg p-3">
-                    <div className="font-semibold">🔗 Quick Link</div>
-                    <a href={mainEntry.link.url} className="text-blue-100 hover:text-white underline">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-30 hover:bg-opacity-30 transition-all duration-300">
+                    <div className="font-bold text-lg mb-1">🔗 Quick Link</div>
+                    <a href={mainEntry.link.url} className="text-blue-100 hover:text-white underline transition-colors duration-200">
                       {mainEntry.link.title}
                     </a>
                   </div>
                 )}
               </div>
 
-              <div className="mt-6">
-                <span className="bg-red-500 px-4 py-2 rounded-full text-sm font-bold">
+              <div className="mt-8">
+                <span className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-3 rounded-full text-sm font-bold shadow-lg animate-pulse">
                   🔴 LIVE
                 </span>
               </div>
@@ -535,7 +541,7 @@ export default async function HomePage() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-6xl mx-auto px-6 py-8">
+        <main className="max-w-7xl mx-auto px-6 py-16">
           
           {/* NEW: Dedicated Schema Fields Display Section */}
           <SchemaFieldsDisplay entry={mainEntry} />
@@ -568,14 +574,14 @@ export default async function HomePage() {
 
           {/* Taxonomy Display */}
           {mainEntry.taxonomies && mainEntry.taxonomies.length > 0 && (
-            <section className="mb-12">
+            <section className="mb-16">
               <TaxonomyRenderer taxonomies={mainEntry.taxonomies} />
             </section>
           )}
 
           {/* Sample Taxonomy if no CMS data */}
           {(!mainEntry.taxonomies || mainEntry.taxonomies.length === 0) && (
-            <section className="mb-12">
+            <section className="mb-16">
               <TaxonomyRenderer taxonomies={sampleTaxonomies} />
             </section>
           )}
@@ -588,18 +594,18 @@ export default async function HomePage() {
           )}
 
           {/* Enhanced News Categories */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">📰 News Categories</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <section className="mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-12 text-center bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">📰 News Categories</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {enhancedCategories.map((category) => (
-                <div key={category.uid} className="bg-white p-6 rounded-lg shadow-md text-center hover:shadow-lg transition-shadow">
-                  <div className="text-3xl mb-3">{category.icon}</div>
-                  <h3 className="font-semibold text-lg">{category.title}</h3>
-                  <p className="text-gray-600 text-sm mt-1">{category.description}</p>
+                <div key={category.uid} className="bg-white p-8 rounded-2xl shadow-xl text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+                  <div className="text-5xl mb-4">{category.icon}</div>
+                  <h3 className="font-bold text-xl mb-2">{category.title}</h3>
+                  <p className="text-gray-600 text-sm mt-2 leading-relaxed">{category.description}</p>
                   {category.article_count && (
-                    <div className="mt-3">
+                    <div className="mt-4">
                       <span 
-                        className="px-3 py-1 rounded-full text-xs font-medium text-white"
+                        className="px-4 py-2 rounded-full text-sm font-bold text-white shadow-md"
                         style={{ backgroundColor: category.color }}
                       >
                         {category.article_count} articles
@@ -658,36 +664,36 @@ export default async function HomePage() {
           )}
 
           {/* Latest News Stories */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">📺 Latest Stories</h2>
-            <div className="space-y-6">
+          <section className="mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-12 text-center bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">📺 Latest Stories</h2>
+            <div className="space-y-8">
               {enhancedNews.map((news) => (
-                <article key={news.uid} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <article key={news.uid} className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3 hover:text-blue-600 transition-colors duration-200">
                         {news.title}
                       </h3>
-                      <p className="text-gray-600 mb-3">
+                      <p className="text-gray-600 mb-4 text-lg leading-relaxed">
                         {news.description}
                       </p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="flex items-center space-x-6 text-sm">
                         {news.category && (
                           <span 
-                            className="px-3 py-1 rounded-full text-white font-medium"
+                            className="px-4 py-2 rounded-full text-white font-bold shadow-md"
                             style={{ backgroundColor: news.category.color }}
                           >
                             {news.category.icon} {news.category.title}
                           </span>
                         )}
                         {news.author && (
-                          <span className="flex items-center space-x-1">
+                          <span className="flex items-center space-x-2 text-gray-600">
                             <span>👤</span>
-                            <span>{news.author.name} ({news.author.role})</span>
+                            <span className="font-semibold">{news.author.name} ({news.author.role})</span>
                           </span>
                         )}
                         {news.published_date && (
-                          <span className="flex items-center space-x-1">
+                          <span className="flex items-center space-x-2 text-gray-500">
                             <span>🕒</span>
                             <span>{new Date(news.published_date).toLocaleDateString()}</span>
                           </span>
@@ -698,7 +704,7 @@ export default async function HomePage() {
                       <img 
                         src={news.featured_image.url} 
                         alt={news.title}
-                        className="w-32 h-24 object-cover rounded-lg ml-6"
+                        className="w-40 h-32 object-cover rounded-xl ml-8 shadow-lg"
                       />
                     )}
                   </div>
@@ -708,29 +714,29 @@ export default async function HomePage() {
           </section>
 
           {/* Enhanced Team Section */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">👥 Our News Team</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <section className="mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-12 text-center bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">👥 Our News Team</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {enhancedAuthors.map((author) => (
-                <div key={author.uid} className="bg-white p-6 rounded-lg shadow-md text-center hover:shadow-lg transition-shadow">
+                <div key={author.uid} className="bg-white p-8 rounded-2xl shadow-xl text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
                   {author.profile_image ? (
                     <img 
                       src={author.profile_image.url} 
                       alt={author.name}
-                      className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+                      className="w-24 h-24 rounded-full mx-auto mb-6 object-cover shadow-lg"
                     />
                   ) : (
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full mx-auto mb-4 flex items-center justify-center text-xl font-bold">
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full mx-auto mb-6 flex items-center justify-center text-2xl font-bold shadow-lg">
                       {author.name.split(' ').map(n => n[0]).join('')}
                     </div>
                   )}
-                  <h3 className="font-semibold text-lg">{author.name}</h3>
-                  <p className="text-blue-600 font-medium">{author.role}</p>
+                  <h3 className="font-bold text-xl mb-2">{author.name}</h3>
+                  <p className="text-blue-600 font-bold mb-2">{author.role}</p>
                   {author.department && (
-                    <p className="text-gray-600 text-sm">{author.department} Department</p>
+                    <p className="text-gray-600 text-sm mb-1">{author.department} Department</p>
                   )}
                   {author.experience_years && (
-                    <p className="text-gray-500 text-sm mt-1">
+                    <p className="text-gray-500 text-sm">
                       {author.experience_years} years experience
                     </p>
                   )}
@@ -774,16 +780,16 @@ export default async function HomePage() {
         </main>
 
         {/* Enhanced Footer */}
-        <footer className="bg-gray-800 text-white py-8">
+        <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12">
           <div className="max-w-6xl mx-auto px-6 text-center">
-            <p className="text-gray-300 mb-2">
+            <p className="text-gray-300 mb-4 text-lg">
               © 2024 {mainEntry.title} • Built with Next.js & Contentstack
             </p>
-            <div className="flex justify-center space-x-6 text-sm text-gray-400">
-              <span>✅ Complete Schema Implementation</span>
-              <span>✅ Modular Blocks Support</span>
-              <span>✅ Taxonomy Integration</span>
-              <span>✅ Asset Management</span>
+            <div className="flex justify-center space-x-8 text-sm text-gray-400">
+              <span className="bg-green-600 px-3 py-1 rounded-full text-white font-semibold">✅ Complete Schema Implementation</span>
+              <span className="bg-blue-600 px-3 py-1 rounded-full text-white font-semibold">✅ Modular Blocks Support</span>
+              <span className="bg-purple-600 px-3 py-1 rounded-full text-white font-semibold">✅ Taxonomy Integration</span>
+              <span className="bg-orange-600 px-3 py-1 rounded-full text-white font-semibold">✅ Asset Management</span>
             </div>
           </div>
         </footer>
