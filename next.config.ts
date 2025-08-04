@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable static export for deployment
-  output: 'export',
+  // Standard Next.js build (no static export)
   trailingSlash: true,
   images: {
     unoptimized: true,
