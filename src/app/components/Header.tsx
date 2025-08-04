@@ -25,6 +25,22 @@ export default function Header({ globalSettings, languageSwitchButton, currentLa
   // Get the first global setting or use fallback
   const globalSetting = globalSettings.length > 0 ? globalSettings[0] : null;
 
+  // Get the appropriate title based on language
+  const getTitleByLanguage = () => {
+    if (selectedLanguage === 'Hindi' || selectedLanguage.toLowerCase().includes('hindi')) {
+      return globalSetting?.title || 'चैनल 24 न्यूज़';
+    }
+    return globalSetting?.title || 'Channel 24 News';
+  };
+
+  // Get the appropriate subtitle based on language
+  const getSubtitleByLanguage = () => {
+    if (selectedLanguage === 'Hindi' || selectedLanguage.toLowerCase().includes('hindi')) {
+      return globalSetting?.single_line || 'ताज़ा खबरें और अपडेट्स';
+    }
+    return globalSetting?.single_line || 'Latest News and Updates';
+  };
+
   // Handle click outside to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -107,13 +123,11 @@ export default function Header({ globalSettings, languageSwitchButton, currentLa
             )}
             <div>
               <h1 className="text-3xl font-bold">
-                {globalSetting?.title || 'Channel 24 News'}
+                {getTitleByLanguage()}
               </h1>
-              {globalSetting?.single_line && (
-                <p className="text-blue-100 text-sm">
-                  {globalSetting.single_line}
-                </p>
-              )}
+              <p className="text-blue-100 text-sm">
+                {getSubtitleByLanguage()}
+              </p>
             </div>
           </div>
 
