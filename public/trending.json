@@ -1,0 +1,45 @@
+{
+  "entries": [
+    {
+      "uid": "blt0bcecbcc93c3b00e",
+      "title": "Trending",
+      "modular_blocks": [
+        {
+          "link": {
+            "title": "Politics",
+            "href": "/category/politics",
+            "_metadata": {
+              "uid": "csfa116cf383a78758"
+            }
+          }
+        },
+        {
+          "link": {
+            "title": "Entertainment",
+            "href": "/category/entertainment",
+            "_metadata": {
+              "uid": "cs0ff3aa10ed7762f2"
+            }
+          }
+        },
+        {
+          "link": {
+            "title": "Technology",
+            "href": "/category/technology",
+            "_metadata": {
+              "uid": "cs449f44d7c119674a"
+            }
+          }
+        }
+      ],
+      "tags": [],
+      "locale": "en-us",
+      "created_by": "blt1e3857af7fb6b0a2",
+      "updated_by": "blt1e3857af7fb6b0a2",
+      "created_at": "2025-08-04T17:54:51.000Z",
+      "updated_at": "2025-08-04T17:55:01.006Z",
+      "_version": 2,
+      "_in_progress": true
+    }
+  ]
+} 
