@@ -102,7 +102,7 @@ export default async function EnglishHomePage() {
       {
         uid: 'blt5dcdc6ba7662a2bb',
         title: 'Sports',
-        rich_text_editor: 'Stay updated with the latest happenings in the world of sports, from cricket and football to tennis, kabaddi, and more. Get live scores, match highlights, expert analysis, and exclusive interviews with your favorite athletes. Whether it\'s IPL thrillers, Olympic milestones, or India\'s victories on the global stage — we\'ve got it all covered.',
+        rich_text_editor: 'Stay updated with the latest happenings in the world of sports, from cricket and football to tennis, kabaddi, and more. Get live scores, match highlights, expert analysis, and exclusive interviews with your favorite athletes. Whether it&apos;s IPL thrillers, Olympic milestones, or India&apos;s victories on the global stage — we&apos;ve got it all covered.',
         url: '#',
         file: {
           filename: 'sports.jpg',
@@ -223,7 +223,9 @@ export default async function EnglishHomePage() {
                         <div>
                           <p className="font-semibold">{author.title}</p>
                           {author.rich_text_editor && (
-                            <p className="text-sm text-gray-300" dangerouslySetInnerHTML={{ __html: author.rich_text_editor }} />
+                            <p className="text-sm text-gray-300">
+                              {author.rich_text_editor.replace(/<[^>]*>/g, '')}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -278,7 +280,7 @@ export default async function EnglishHomePage() {
             <p className="text-xl text-gray-600 mb-8">Your trusted source for news and updates</p>
             <div className="bg-white rounded-lg shadow p-8">
               <h2 className="text-2xl font-semibold mb-4">Latest News</h2>
-              <p className="text-gray-600">We're currently updating our content. Please check back soon for the latest news and updates.</p>
+              <p className="text-gray-600">We&apos;re currently updating our content. Please check back soon for the latest news and updates.</p>
             </div>
           </div>
         </main>
