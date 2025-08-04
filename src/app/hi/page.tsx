@@ -354,7 +354,7 @@ export default async function HindiHomePage() {
 
             {/* Copyright */}
             <div className="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
-              <p>&copy; 2024 चैनल 24 न्यूज़। सर्वाधिकार सुरक्षित।</p>
+              <p>&copy; 2024 आज तक। सर्वाधिकार सुरक्षित।</p>
             </div>
           </div>
         </footer>

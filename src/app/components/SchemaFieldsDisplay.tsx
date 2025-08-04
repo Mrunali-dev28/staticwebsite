@@ -46,14 +46,14 @@ export default async function SchemaFieldsDisplay() {
 
   // Use real data or fallback
   const entry: NewsChannelEntry = (mainEntry as NewsChannelEntry) || {
-    title: "Channel 24 News",
-    url: "https://channel24news.com",
+    title: "Aaj Tak",
+    url: "https://aajtak.com",
     date: new Date().toISOString(),
     boolean: true,
     number: 24,
     link: { 
       title: "Watch Live Stream", 
-      url: "https://live.channel24news.com" 
+      url: "https://live.aajtak.com" 
     },
     uid: "news_channel"
   };

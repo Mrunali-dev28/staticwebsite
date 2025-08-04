@@ -199,7 +199,7 @@ export default async function EnglishHomePage() {
 
         </main>
 
-        {/* Footer with Author Information */}
+        {/* Footer */}
         <footer className="bg-gray-800 text-white mt-8">
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="flex justify-between items-start">
@@ -207,144 +207,81 @@ export default async function EnglishHomePage() {
               {/* Author Information */}
               <div className="flex-1">
                 <h3 className="text-xl font-bold mb-4">Our Team</h3>
-                {newsAuthors && newsAuthors.length > 0 ? (
-                  <div className="space-y-4">
-                    {newsAuthors.slice(0, 3).map((author) => (
-                      <div key={author.uid} className="flex items-center space-x-3">
-                        {author.file ? (
+                <div className="space-y-2">
+                  {newsAuthors && newsAuthors.length > 0 ? (
+                    newsAuthors.map((author, index) => (
+                      <div key={author.uid || index} className="flex items-center space-x-3">
+                        {author.file && (
                           <Image 
                             src={author.file.url} 
                             alt={author.file.filename}
                             width={40}
                             height={40}
-                            className="rounded-full object-cover"
+                            className="rounded-full"
                           />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                            <span className="text-white text-sm">👤</span>
-                          </div>
                         )}
                         <div>
-                          <div className="text-sm font-medium text-white">{author.title}</div>
+                          <p className="font-semibold">{author.title}</p>
                           {author.rich_text_editor && (
-                            <div className="text-xs text-gray-400 line-clamp-2">
-                              {author.rich_text_editor.replace(/<[^>]*>/g, '')}
-                            </div>
+                            <p className="text-sm text-gray-300" dangerouslySetInnerHTML={{ __html: author.rich_text_editor }} />
                           )}
                         </div>
                       </div>
-                    ))}
-                    {newsAuthors.length > 3 && (
-                      <div className="text-sm text-gray-400 mt-2">
-                        +{newsAuthors.length - 3} more authors
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
+                    ))
+                  ) : (
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                        <span className="text-white text-sm">👤</span>
+                      <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold">AT</span>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-white">John Smith</div>
-                        <div className="text-xs text-gray-400">Political Correspondent</div>
+                        <p className="font-semibold">Aaj Tak News Team</p>
+                        <p className="text-sm text-gray-300">Dedicated to bringing you the latest news and updates</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                        <span className="text-white text-sm">👤</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-white">Maria Garcia</div>
-                        <div className="text-xs text-gray-400">Technology Editor</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                        <span className="text-white text-sm">👤</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-white">Alex Johnson</div>
-                        <div className="text-xs text-gray-400">Sports Journalist</div>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-400 mt-2">
-                      +2 more authors
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Contact Information - Right Corner */}
-              <div className="text-right">
-                <h3 className="text-xl font-bold mb-4">Contact</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-end space-x-3">
-                    <div>
-                      <div className="text-sm font-medium text-white">Email</div>
-                      <div className="text-xs text-gray-400">info@aajtaknews.com</div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                      <span className="text-white text-xs">📧</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-end space-x-3">
-                    <div>
-                      <div className="text-sm font-medium text-white">Phone</div>
-                      <div className="text-xs text-gray-400">+1 (888) 888-6786</div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
-                      <span className="text-white text-xs">📞</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-end space-x-3">
-                    <div>
-                      <div className="text-sm font-medium text-white">Address</div>
-                      <div className="text-xs text-gray-400">123 News Street, Media City</div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                      <span className="text-white text-xs">📍</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
+              {/* Contact Information */}
+              <div className="flex-1 text-right">
+                <h3 className="text-xl font-bold mb-4">Contact Us</h3>
+                <div className="space-y-2 text-sm">
+                  <p>Email: news@aajtak.com</p>
+                  <p>Phone: +91-11-1234-5678</p>
+                  <p>Address: News Complex, New Delhi</p>
+                </div>
+              </div>
             </div>
-
+            
             {/* Copyright */}
-            <div className="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
-              <p>&copy; 2024 Channel 24 News. All rights reserved.</p>
+            <div className="border-t border-gray-700 mt-6 pt-6 text-center">
+              <p>&copy; 2024 Aaj Tak. All rights reserved.</p>
             </div>
           </div>
         </footer>
-
       </div>
     );
-
   } catch (error) {
-    console.error('Error loading English page:', error);
+    console.error('Error in EnglishHomePage:', error);
     
+    // Fallback UI in case of error
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-2xl mx-auto px-6">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            Channel 24 News
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Complete Contentstack integration in English!
-          </p>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="font-semibold mb-4">✅ Features Implemented</h3>
-            <ul className="text-left space-y-2 text-gray-600">
-              <li>• Text, URL, Date, Boolean, Number fields</li>
-              <li>• Link fields and File assets</li>
-              <li>• Reference fields and Taxonomy</li>
-              <li>• Modular blocks support</li>
-              <li>• Responsive design</li>
-            </ul>
+      <div className="min-h-screen bg-gray-50">
+        <Header 
+          globalSettings={[]}
+          currentLanguage="ENGLISH"
+        />
+        
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">Aaj Tak</h1>
+            <p className="text-xl text-gray-600 mb-8">Your trusted source for news and updates</p>
+            <div className="bg-white rounded-lg shadow p-8">
+              <h2 className="text-2xl font-semibold mb-4">Latest News</h2>
+              <p className="text-gray-600">We're currently updating our content. Please check back soon for the latest news and updates.</p>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }

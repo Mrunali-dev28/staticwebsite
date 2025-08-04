@@ -28,9 +28,9 @@ export default function Header({ globalSettings, languageSwitchButton, currentLa
   // Get the appropriate title based on language
   const getTitleByLanguage = () => {
     if (selectedLanguage === 'Hindi' || selectedLanguage.toLowerCase().includes('hindi')) {
-      return globalSetting?.title || 'चैनल 24 न्यूज़';
+      return globalSetting?.title || 'आज तक';
     }
-    return globalSetting?.title || 'Channel 24 News';
+    return globalSetting?.title || 'Aaj Tak';
   };
 
   // Get the appropriate subtitle based on language
