@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { NewsAuthor } from '@/lib/contentstack';
 
 interface NewsAuthorsProps {
@@ -36,10 +37,12 @@ export default function NewsAuthors({ newsAuthors }: NewsAuthorsProps) {
             <div className="text-center">
               {author.file && (
                 <div className="mb-4">
-                  <img 
+                  <Image 
                     src={author.file.url} 
                     alt={author.file.filename}
-                    className="w-24 h-24 rounded-full object-cover mx-auto border-4 border-blue-100"
+                    width={96}
+                    height={96}
+                    className="rounded-full object-cover mx-auto border-4 border-blue-100"
                   />
                 </div>
               )}

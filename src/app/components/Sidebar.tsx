@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { SidebarNews } from '@/lib/contentstack';
 
 interface SidebarProps {
@@ -19,9 +20,11 @@ export default function Sidebar({ sidebarNews }: SidebarProps) {
               <div className="space-y-3">
                 {news.file && (
                   <div className="w-full">
-                    <img 
+                    <Image 
                       src={news.file.url} 
                       alt={news.file.filename}
+                      width={400}
+                      height={192}
                       className="w-full h-48 object-cover rounded"
                     />
                   </div>

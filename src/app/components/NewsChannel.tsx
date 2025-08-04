@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface NewsChannelEntry {
   uid: string;
@@ -43,10 +44,12 @@ export default function NewsChannel({ newsChannelEntries }: NewsChannelProps) {
               {/* Image */}
               {entry.file && (
                 <div className="flex-shrink-0">
-                  <img 
+                  <Image 
                     src={entry.file.url} 
                     alt={entry.file.filename}
-                    className="w-16 h-16 rounded-lg object-cover"
+                    width={64}
+                    height={64}
+                    className="rounded-lg object-cover"
                   />
                 </div>
               )}

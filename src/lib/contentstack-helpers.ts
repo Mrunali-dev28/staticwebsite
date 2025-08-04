@@ -2,8 +2,6 @@ import deliverySDK, {
   GlobalSetting, 
   SidebarNews, 
   BreakingAlert,
-  NewsCategory,
-  NewsAuthor,
   Contact,
   Trending,
   LanguageSwitchButton
@@ -400,7 +398,7 @@ export async function fetchContentForLocale<T>(
     const response = await query.find();
     console.log(`Found ${contentType} content for locale: ${locale}`);
     return (response.entries || []) as T[];
-  } catch (error) {
+  } catch {
     console.log(`${contentType} not found for locale: ${locale}, using fallback data`);
     return [];
   }
@@ -453,15 +451,15 @@ export async function fetchHindiNewsCategories() {
           .includeFallback()
           .find();
         return response.entries || [];
-      } catch (fallbackError) {
+      } catch {
         console.log('Fallback also failed, returning empty array');
         return [];
       }
     }
     
     return hindiCategories;
-  } catch (error) {
-    console.log('Error fetching Hindi news categories:', error);
+  } catch {
+    console.log('Error fetching Hindi news categories');
     return [];
   }
 }

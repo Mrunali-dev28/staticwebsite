@@ -1,7 +1,5 @@
-import React from 'react';
+
 import { 
-  fetchNewsItems, 
-  fetchNewsChannelWithModularBlocks,
   fetchAllNewsChannelEntries,
   fetchGlobalSettings,
   fetchSidebarNews,
@@ -9,43 +7,21 @@ import {
   fetchNewsCategories,
   fetchNewsAuthors,
   fetchLiveUpdates,
-  fetchContact,
   fetchTrending,
   fetchLanguageSwitchButton
 } from '@/lib/contentstack-helpers';
-import { GlobalSetting, SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Contact, Trending, LanguageSwitchButton } from '@/lib/contentstack';
+import Image from 'next/image';
+import { GlobalSetting, SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton } from '@/lib/contentstack';
 
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import BreakingAlertComponent from '../components/BreakingAlert';
 import NewsCategories from '../components/NewsCategories';
-import NewsAuthors from '../components/NewsAuthors';
+
 import LiveUpdates from '../components/LiveUpdates';
 import NewsChannel from '../components/NewsChannel';
 
-// Simplified interfaces
-interface Author {
-  uid: string;
-  name: string;
-  role: string;
-}
 
-interface Category {
-  uid: string;
-  title: string;
-  description?: string;
-  color?: string;
-  icon?: string;
-}
-
-interface NewsItem {
-  uid: string;
-  title: string;
-  description?: string;
-  category?: Category;
-  author?: Author;
-  published_date?: string;
-}
 
 interface NewsChannelEntry {
   title: string;
@@ -64,7 +40,6 @@ export default async function EnglishHomePage() {
   try {
     // Fetch all data from Contentstack
     const [
-      newsItems,
       globalSettings,
       sidebarNews,
       breakingAlerts,
@@ -72,11 +47,9 @@ export default async function EnglishHomePage() {
       newsAuthors,
       liveUpdates,
       newsChannelEntries,
-      contactData,
       trendingData,
       languageSwitchButton
     ] = await Promise.all([
-      fetchNewsItems(),
       fetchGlobalSettings(), // Use English global settings
       fetchSidebarNews(), // Use English sidebar news
       fetchBreakingAlerts(), // Use English breaking alerts
@@ -84,11 +57,9 @@ export default async function EnglishHomePage() {
       fetchNewsAuthors(), // Use English news authors
       fetchLiveUpdates(), // Use English live updates
       fetchAllNewsChannelEntries(), // Use English news channel entries
-      fetchContact(), // Use English contact data
       fetchTrending(), // Use English trending data
       fetchLanguageSwitchButton()
     ]) as [
-      unknown[],
       GlobalSetting[],
       SidebarNews[],
       BreakingAlert[],
@@ -96,7 +67,6 @@ export default async function EnglishHomePage() {
       NewsAuthor[],
       LiveUpdate[],
       NewsChannelEntry[],
-      Contact[],
       Trending[],
       LanguageSwitchButton | null
     ];
@@ -127,62 +97,6 @@ export default async function EnglishHomePage() {
     // Use fallback if no language switch button from CMS
     const displayLanguageSwitchButton = languageSwitchButton || fallbackLanguageSwitchButton;
 
-    // Get main entry or use fallback
-    let mainEntry: NewsChannelEntry;
-    try {
-      const entryFromCMS = await fetchNewsChannelWithModularBlocks(
-        process.env.ENTRYUID || 'blt0171967259c79e5c'
-      ) as NewsChannelEntry;
-      
-      mainEntry = entryFromCMS || {
-        title: "Channel 24 News",
-        url: "https://channel24news.com",
-        date: new Date().toISOString(),
-        boolean: true,
-        number: 24,
-        link: { 
-          title: "Watch Live Stream", 
-          url: "https://live.channel24news.com" 
-        },
-        uid: "news_channel"
-      };
-    } catch {
-      // Fallback data
-      mainEntry = {
-        title: "Channel 24 News",
-        url: "https://channel24news.com", 
-        date: new Date().toISOString(),
-        boolean: true,
-        number: 24,
-        link: { 
-          title: "Watch Live Stream", 
-          url: "https://live.channel24news.com" 
-        },
-        uid: "news_channel"
-      };
-    }
-
-    // Fallback data for development
-    const fallbackNews: NewsItem[] = [
-      {
-        uid: 'n1',
-        title: 'Breaking: Major Policy Changes Announced',
-        description: 'Government announces significant policy reforms.',
-        category: { 
-          uid: 'c1', 
-          title: 'Breaking News', 
-          color: '#ef4444',
-          icon: '🚨' 
-        },
-        published_date: '2024-01-15T10:30:00Z',
-        author: { 
-          uid: 'a1', 
-          name: 'Sarah Johnson', 
-          role: 'Chief Reporter' 
-        }
-      }
-    ];
-
     // Fallback news categories data
     const fallbackNewsCategories: NewsCategory[] = [
       {
@@ -199,9 +113,7 @@ export default async function EnglishHomePage() {
 
 
 
-    const displayNews = (newsItems as NewsItem[]).length > 0 
-      ? newsItems as NewsItem[] 
-      : fallbackNews;
+
 
     // Use fallback news categories if none found in CMS
     const displayNewsCategories = (newsCategories as NewsCategory[]).length > 0 
@@ -300,10 +212,12 @@ export default async function EnglishHomePage() {
                     {newsAuthors.slice(0, 3).map((author) => (
                       <div key={author.uid} className="flex items-center space-x-3">
                         {author.file ? (
-                          <img 
+                          <Image 
                             src={author.file.url} 
                             alt={author.file.filename}
-                            className="w-10 h-10 rounded-full object-cover"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">

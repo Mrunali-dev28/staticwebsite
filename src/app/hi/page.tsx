@@ -1,30 +1,16 @@
 import React from 'react';
+import Image from 'next/image';
 import {
-  fetchNewsItems,
-  fetchNewsChannelWithModularBlocks,
-  fetchAllNewsChannelEntries,
-  fetchGlobalSettings,
-  fetchSidebarNews,
-  fetchBreakingAlerts,
-  fetchNewsCategories,
-  fetchNewsAuthors,
-  fetchLiveUpdates,
-  fetchContact,
-  fetchTrending,
   fetchLanguageSwitchButton,
-  // NEW: Use the universal function
-  fetchContentForLocale,
   fetchHindiNewsCategories,
   fetchHindiNewsAuthors,
-  fetchHindiGlobalSettings,
   fetchHindiSidebarNews,
   fetchHindiBreakingAlerts,
   fetchHindiLiveUpdates,
-  fetchHindiContact,
   fetchHindiTrending,
   fetchHindiNewsChannelEntries
 } from '@/lib/contentstack-helpers';
-import { GlobalSetting, SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Contact, Trending, LanguageSwitchButton } from '@/lib/contentstack';
+import { SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton } from '@/lib/contentstack';
 
 import Header from '../components/Header';
 import NewsChannel from '../components/NewsChannel';
@@ -38,39 +24,30 @@ export default async function HindiHomePage() {
   try {
     // NEW: Use the universal function for all Hindi content
     const [
-      newsItems,
-      globalSettings,
       sidebarNews,
       breakingAlerts,
       newsCategories,
       newsAuthors,
       liveUpdates,
       newsChannelEntries,
-      contactData,
       trendingData,
       languageSwitchButton
     ] = await Promise.all([
-      fetchNewsItems(), // News items are locale-agnostic
-      fetchHindiGlobalSettings(),
       fetchHindiSidebarNews(),
       fetchHindiBreakingAlerts(),
       fetchHindiNewsCategories(),
       fetchHindiNewsAuthors(),
       fetchHindiLiveUpdates(),
       fetchHindiNewsChannelEntries(),
-      fetchHindiContact(),
       fetchHindiTrending(),
       fetchLanguageSwitchButton()
     ]) as [
-      unknown[],
-      GlobalSetting[],
       SidebarNews[],
       BreakingAlert[],
       NewsCategory[],
       NewsAuthor[],
       LiveUpdate[],
-      any[],
-      Contact[],
+      Trending[],
       Trending[],
       LanguageSwitchButton | null
     ];
@@ -174,13 +151,11 @@ export default async function HindiHomePage() {
 
     // Use Hindi content with fallback
     const displayLanguageSwitchButton = languageSwitchButton || fallbackHindiLanguageSwitchButton;
-    const displayGlobalSettings = globalSettings;
     const displaySidebarNews = hindiSidebarNews;
     const displayBreakingAlerts = hindiBreakingAlerts;
     const displayNewsCategories = newsCategories && newsCategories.length > 0 ? newsCategories : fallbackHindiNewsCategories;
     const displayNewsAuthors = newsAuthors;
     const displayLiveUpdates = hindiLiveUpdates;
-    const displayContact = contactData;
     const displayTrending = trendingData;
     const displayNewsChannelEntries = hindiNewsChannelEntries;
 
@@ -188,7 +163,7 @@ export default async function HindiHomePage() {
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <Header 
-          globalSettings={displayGlobalSettings} 
+          globalSettings={[]}
           languageSwitchButton={displayLanguageSwitchButton || undefined}
           currentLanguage="Hindi"
         />
@@ -277,10 +252,12 @@ export default async function HindiHomePage() {
                     {displayNewsAuthors.slice(0, 3).map((author) => (
                       <div key={author.uid} className="flex items-center space-x-3">
                         {author.file ? (
-                          <img 
+                          <Image 
                             src={author.file.url} 
                             alt={author.file.filename}
-                            className="w-10 h-10 rounded-full object-cover"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">

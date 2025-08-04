@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { NewsCategory } from '@/lib/contentstack';
 
 interface NewsCategoriesProps {
@@ -34,9 +35,11 @@ export default function NewsCategories({ newsCategories }: NewsCategoriesProps) 
             <div className="space-y-3">
               {category.file && (
                 <div className="w-full">
-                  <img 
+                  <Image 
                     src={category.file.url} 
                     alt={category.file.filename}
+                    width={400}
+                    height={192}
                     className="w-full h-48 object-cover rounded"
                   />
                 </div>

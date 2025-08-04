@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { GlobalSetting, LanguageSwitchButton } from '@/lib/contentstack';
 
 interface HeaderProps {
@@ -95,10 +96,12 @@ export default function Header({ globalSettings, languageSwitchButton, currentLa
           <div className="flex items-center space-x-4">
             {globalSetting?.file && (
               <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                <img 
+                <Image 
                   src={globalSetting.file.url} 
                   alt={globalSetting.file.filename}
-                  className="w-8 h-8 object-contain"
+                  width={32}
+                  height={32}
+                  className="object-contain"
                 />
               </div>
             )}
