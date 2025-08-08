@@ -20,7 +20,7 @@ export async function GET(
         // Query for entries that might be related to this experience/variant
         const response = await deliverySDK
           .contentType(contentType)
-          .entries()
+          .entry()
           .includeEmbeddedItems()
           .includeFallback()
           .find();
@@ -29,7 +29,7 @@ export async function GET(
           console.log(`✅ Found ${response.entries.length} entries in ${contentType}`);
           
           // Look for entries that might match our experience/variant
-          for (const entry of response.entries) {
+          for (const entry of response.entries as any[]) {
             console.log(`🔍 Checking entry: ${entry.uid} - ${entry.title}`);
             
             // Check if this entry is related to our experience/variant

@@ -41,6 +41,7 @@ export async function GET(
     try {
       console.log('🔍 Searching across all content types...');
       const response = await deliverySDK
+        .contentType('news_channel')
         .entry(uid)
         .includeEmbeddedItems()
         .includeFallback()
