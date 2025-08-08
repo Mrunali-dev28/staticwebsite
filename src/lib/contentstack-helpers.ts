@@ -167,9 +167,8 @@ export async function fetchNewsCategories() {
       .find();
     console.log('✅ News categories found in CMS:', response.entries?.length || 0, 'entries');
     return response.entries || [];
-  } catch (error: any) {
+  } catch {
     console.log('News categories not found in CMS, using fallback data');
-    console.log('Error details:', error?.message || 'Unknown error');
     // Return fallback categories
     return [
       {
@@ -1060,7 +1059,7 @@ export async function fetchHindiReadMorePageByUID(uid: string) {
         .fetch();
       console.log('Using English fallback for read more page');
       return fallbackResponse;
-    } catch (fallbackError) {
+    } catch {
       console.log('English fallback also failed for read more page');
       return null;
     }
@@ -1078,9 +1077,8 @@ export async function fetchGoToPoliticsByUID(uid: string) {
       .fetch();
     console.log('Go to politics page found:', response);
     return response;
-  } catch (error) {
+  } catch {
     console.log('Go to politics page not found in CMS, using fallback data');
-    console.log('Error details:', error);
     return null;
   }
 }
@@ -1097,7 +1095,7 @@ export async function fetchHindiGoToPoliticsByUID(uid: string) {
       .fetch();
     console.log('Hindi go to politics page found:', response);
     return response;
-  } catch (error) {
+  } catch {
     console.log('Hindi go to politics page not found in CMS, trying English fallback');
     // Try English as fallback
     try {
@@ -1110,7 +1108,7 @@ export async function fetchHindiGoToPoliticsByUID(uid: string) {
         .fetch();
       console.log('Using English fallback for go to politics page');
       return fallbackResponse;
-    } catch (fallbackError) {
+    } catch {
       console.log('English fallback also failed for go to politics page');
       return null;
     }
@@ -1128,9 +1126,8 @@ export async function fetchTrendingByUID(uid: string) {
       .fetch();
     console.log('Trending entry found:', response);
     return response;
-  } catch (error) {
+  } catch {
     console.log('Trending entry not found in CMS, using fallback data');
-    console.log('Error details:', error);
     return null;
   }
 }

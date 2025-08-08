@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePersonalize } from '@/lib/use-personalize';
 import { fetchLocationSpecificNews, fetchLocationTrendingNews, fetchHindiLiveUpdates, fetchLiveUpdates } from '@/lib/contentstack-helpers';
-import { getAllVariantsWithFallback, fetchVariantFromContentstack, fetchUSNewsEntry, fetchUSNewsEntryHindi } from '@/lib/personalize-service';
+import { getAllVariantsWithFallback, fetchUSNewsEntry, fetchUSNewsEntryHindi } from '@/lib/personalize-service';
 
 interface PersonalizedNewsProps {
   locale?: 'en' | 'hi';
@@ -21,29 +21,26 @@ interface NewsItem {
   };
 }
 
-interface PersonalizeVariant {
-  experienceShortUid: string;
-  variantShortUid: string;
-  priority: number;
-  content?: {
-    title?: string;
-    description?: string;
-    image?: string;
-    link?: string;
-  };
-}
+
 
 export default function PersonalizedNews({ locale = 'en' }: PersonalizedNewsProps) {
   console.log('🔍 PersonalizedNews: Component rendering with locale:', locale);
   
-  let personalizeData;
+  // Move all hooks to the top level - never call hooks conditionally
+  const [personalizedNews, setPersonalizedNews] = useState<NewsItem[]>([]);
+  const [locationNews, setLocationNews] = useState<NewsItem[]>([]);
+  const [isLoadingNews, setIsLoadingNews] = useState(false);
   
-  try {
-    console.log('🔍 PersonalizedNews: Calling usePersonalize hook...');
-    personalizeData = usePersonalize();
-    console.log('🔍 PersonalizedNews: usePersonalize hook called successfully');
-  } catch (error) {
-    console.error('Error initializing usePersonalize:', error);
+  // Always call hooks at the top level
+  const personalizeData = usePersonalize();
+  
+  const { city, region, manifest, isLoading, error, trackImpression } = personalizeData || {};
+  
+
+  
+  // Handle hook errors gracefully
+  if (!personalizeData) {
+    console.error('Error initializing usePersonalize');
     // Return fallback content if hook fails
     return (
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
@@ -73,8 +70,6 @@ export default function PersonalizedNews({ locale = 'en' }: PersonalizedNewsProp
     );
   }
   
-  const { city, region, manifest, isLoading, error, trackImpression, getPersonalizedContent } = personalizeData;
-  
   // Add error boundary for runtime errors
   if (error) {
     console.error('PersonalizedNews error:', error);
@@ -86,9 +81,8 @@ export default function PersonalizedNews({ locale = 'en' }: PersonalizedNewsProp
       </div>
     );
   }
-  const [personalizedNews, setPersonalizedNews] = useState<NewsItem[]>([]);
-  const [locationNews, setLocationNews] = useState<NewsItem[]>([]);
-  const [isLoadingNews, setIsLoadingNews] = useState(false);
+
+
 
   const getLocationTitle = () => {
     if (region === 'maharashtra') {

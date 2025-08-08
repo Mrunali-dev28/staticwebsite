@@ -246,17 +246,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 <span className="text-xs text-blue-600">Read More →</span>
               </div>
 
-              {/* Advertisement */}
-              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
-                <div className="text-center">
-                  <div className="text-2xl mb-2">📱</div>
-                  <h4 className="font-semibold mb-2">Get News on WhatsApp</h4>
-                  <p className="text-sm mb-3">All major national and international news now on your WhatsApp too!</p>
-                  <button className="bg-white text-green-600 px-4 py-2 rounded-lg text-sm font-medium">
-                    Subscribe Now
-                  </button>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>

@@ -246,17 +246,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 <span className="text-xs text-blue-600">और पढ़ें →</span>
               </div>
 
-              {/* Advertisement */}
-              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
-                <div className="text-center">
-                  <div className="text-2xl mb-2">📱</div>
-                  <h4 className="font-semibold mb-2">WhatsApp पर खबरें पाएं</h4>
-                  <p className="text-sm mb-3">देश-विदेश की सभी बड़ी खबरें अब आपके WhatsApp पर भी!</p>
-                  <button className="bg-white text-green-600 px-4 py-2 rounded-lg text-sm font-medium">
-                    सब्सक्राइब करें
-                  </button>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>

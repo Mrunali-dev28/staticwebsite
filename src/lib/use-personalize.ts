@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  fetchPersonalizeManifest, 
   setUserCity as personalizeSetUserCity,
   getCurrentUserUid,
   trackImpression as personalizeTrackImpression,
@@ -225,8 +224,8 @@ export const usePersonalize = () => {
         console.log('🔍 usePersonalize: Detected city:', detectedCity);
         await setUserCity(detectedCity);
         console.log('🔍 usePersonalize: City set successfully');
-      } catch (error) {
-        console.error('❌ usePersonalize: Error detecting city:', error);
+      } catch {
+        console.error('❌ usePersonalize: Error detecting city');
         // Set fallback state even if Personalize API fails
         const fallbackCity = 'Pune';
         const fallbackRegion = getRegionFromCity(fallbackCity);

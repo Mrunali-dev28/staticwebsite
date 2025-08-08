@@ -99,13 +99,11 @@ export async function fetchVariantContent(
 
 // User management functions
 let currentUserUid: string | null = null;
-let currentCity: string | null = null;
 
 // Set user's city and get personalized content
 export async function setUserCity(city: string): Promise<PersonalizeManifest | null> {
   try {
     console.log('🔍 setUserCity: Setting city to:', city);
-    currentCity = city;
     
     // Generate a user UID based on city (for demo purposes)
     currentUserUid = `user_${city.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;

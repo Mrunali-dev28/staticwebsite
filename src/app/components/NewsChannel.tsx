@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { NewsChannel as NewsChannelType, SeoMetadata } from '@/lib/contentstack';
+import { SeoMetadata } from '@/lib/contentstack';
 
 interface NewsChannelEntry {
   uid: string;

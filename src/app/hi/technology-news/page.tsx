@@ -9,7 +9,7 @@ import {
   fetchHindiNewsCategories,
   fetchHindiEmailSubscription
 } from '@/lib/contentstack-helpers';
-import { SidebarNews, BreakingAlert, NewsAuthor, NewsCategory, LiveUpdate, EmailSubscription } from '@/lib/contentstack';
+import { LiveUpdate, EmailSubscription } from '@/lib/contentstack';
 
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
@@ -22,20 +22,16 @@ export default async function HindiTechnologyNewsPage() {
     const [
       sidebarNews,
       breakingAlerts,
-      newsAuthors,
-      newsChannelEntries,
       liveUpdates,
       newsCategories,
       emailSubscription
     ] = await Promise.all([
       fetchHindiSidebarNews(),
       fetchHindiBreakingAlerts(),
-      fetchHindiNewsAuthors(),
-      fetchHindiNewsChannelEntries(),
       fetchHindiLiveUpdates(),
       fetchHindiNewsCategories(),
       fetchHindiEmailSubscription()
-    ]) as [any[], any[], any[], any[], LiveUpdate[], any[], EmailSubscription | null];
+    ]) as [any[], any[], LiveUpdate[], any[], EmailSubscription | null];
 
     return (
       <div className="min-h-screen bg-gray-50">

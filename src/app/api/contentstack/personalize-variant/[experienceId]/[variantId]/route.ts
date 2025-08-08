@@ -23,7 +23,7 @@ export async function GET(
           .entries()
           .includeEmbeddedItems()
           .includeFallback()
-          .fetch();
+          .find();
         
         if (response && response.entries && response.entries.length > 0) {
           console.log(`✅ Found ${response.entries.length} entries in ${contentType}`);
