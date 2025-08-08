@@ -27,15 +27,15 @@ export default function Header({ globalSettings, languageSwitchButton, currentLa
 
   // Get the appropriate title based on language
   const getTitleByLanguage = () => {
-    if (selectedLanguage === 'Hindi' || selectedLanguage.toLowerCase().includes('hindi')) {
-      return globalSetting?.title || 'आज तक';
+    if (selectedLanguage === 'Hindi' || selectedLanguage.toLowerCase().includes('hindi') || currentLanguage === 'Hindi') {
+      return globalSetting?.title || 'मेरा चैनल सबसे तेज';
     }
-    return globalSetting?.title || 'Aaj Tak';
+    return globalSetting?.title || 'My Channel Sabse Tej';
   };
 
   // Get the appropriate subtitle based on language
   const getSubtitleByLanguage = () => {
-    if (selectedLanguage === 'Hindi' || selectedLanguage.toLowerCase().includes('hindi')) {
+    if (selectedLanguage === 'Hindi' || selectedLanguage.toLowerCase().includes('hindi') || currentLanguage === 'Hindi') {
       return globalSetting?.single_line || 'ताज़ा खबरें और अपडेट्स';
     }
     return globalSetting?.single_line || 'Latest News and Updates';

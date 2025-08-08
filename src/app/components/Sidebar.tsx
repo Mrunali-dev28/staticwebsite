@@ -4,13 +4,14 @@ import { SidebarNews } from '@/lib/contentstack';
 
 interface SidebarProps {
   sidebarNews: SidebarNews[];
+  locale?: 'en' | 'hi';
 }
 
-export default function Sidebar({ sidebarNews }: SidebarProps) {
+export default function Sidebar({ sidebarNews, locale = 'en' }: SidebarProps) {
   return (
     <aside className="w-full bg-white rounded-lg shadow-lg">
       <h3 className="text-xl font-bold text-gray-900 p-4 border-b border-gray-200">
-        📰 Latest Updates
+        📰 {locale === 'hi' ? 'नवीनतम अपडेट' : 'Latest Updates'}
       </h3>
       
       <div className="divide-y divide-gray-100">
@@ -40,7 +41,7 @@ export default function Sidebar({ sidebarNews }: SidebarProps) {
                   )}
                   <div className="mt-2">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      Breaking
+                      {locale === 'hi' ? 'तोड़फोड़' : 'Breaking'}
                     </span>
                   </div>
                 </div>
@@ -51,7 +52,7 @@ export default function Sidebar({ sidebarNews }: SidebarProps) {
           <div className="text-center py-8">
             <div className="text-gray-400 text-4xl mb-4">📰</div>
             <p className="text-gray-500 text-sm">
-              No sidebar news available at the moment
+              {locale === 'hi' ? 'इस समय कोई साइडबार समाचार उपलब्ध नहीं है' : 'No sidebar news available at the moment'}
             </p>
           </div>
         )}

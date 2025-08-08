@@ -22,6 +22,27 @@ export interface GlobalSetting {
   };
 }
 
+export interface SeoMetadata {
+  uid: string;
+  title?: string;
+  description?: string;
+  keywords?: string;
+  url?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: {
+    url: string;
+    filename: string;
+  };
+  twitter_title?: string;
+  twitter_description?: string;
+  twitter_image?: {
+    url: string;
+    filename: string;
+  };
+}
+
 export interface NewsChannel {
   uid: string;
   title: string;
@@ -35,6 +56,7 @@ export interface NewsChannel {
   reference?: unknown[];
   hgvgh767?: boolean;
   b12jh7t7?: boolean;
+  news?: SeoMetadata; // Global field for SEO metadata
 }
 
 export interface SidebarNews {
@@ -94,6 +116,14 @@ export interface Contact {
   rich_text_editor?: string;
 }
 
+export interface EmailSubscription {
+  uid: string;
+  title: string;
+  single_line?: string;
+  button_text?: string;
+  placeholder_text?: string;
+}
+
 export interface Trending {
   uid: string;
   title: string;
@@ -101,11 +131,17 @@ export interface Trending {
     link?: {
       title: string;
       href: string;
+      description?: string;
       _metadata?: {
         uid: string;
       };
     };
+    // Add support for other modular block types
+    [key: string]: any;
   }>;
+  _embedded_items?: {
+    [key: string]: any[];
+  };
   tags?: string[];
   locale?: string;
   created_by?: string;
@@ -129,4 +165,43 @@ export interface LanguageSwitchButton {
   }>;
 }
 
+export interface MonsoonNews {
+  uid: string;
+  title: string;
+  description?: string;
+  content?: string;
+  rich_text_editor?: string;
+  file?: {
+    url: string;
+    filename: string;
+  };
+  date?: string;
+  location?: string;
+  severity?: string;
+  emergency_contacts?: Array<{
+    title: string;
+    number: string;
+  }>;
+  affected_areas?: string[];
+  safety_advisory?: string;
+  weather_updates?: string;
+}
+
+export interface ReadMorePage {
+  uid: string;
+  title: string;
+  latest_updates?: string;
+  emergency_contacts?: number;
+  url?: string;
+}
+
+export interface GoToPolitics {
+  uid: string;
+  title: string;
+  updates?: string;
+  latest_news?: string;
+  url?: string;
+}
+
+// Export the Stack for use in other files
 export default Stack; 

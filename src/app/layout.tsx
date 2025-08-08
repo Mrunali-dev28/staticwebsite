@@ -13,18 +13,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aaj Tak - Your Trusted News Source",
-  description: "Stay updated with the latest breaking news, weather updates, and live coverage from Aaj Tak. Your trusted source for accurate and timely news reporting.",
+  title: "My Channel Sabse Tej - Your Trusted News Source",
+  description: "Stay updated with the latest breaking news, weather updates, and live coverage from My Channel Sabse Tej. Your trusted source for accurate and timely news reporting.",
   keywords: "news, breaking news, live updates, weather, sports, politics, entertainment",
-  authors: [{ name: "Aaj Tak News Team" }],
-  creator: "Aaj Tak",
-  publisher: "Aaj Tak",
+  authors: [{ name: "My Channel Sabse Tej News Team" }],
+  creator: "My Channel Sabse Tej",
+  publisher: "My Channel Sabse Tej",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://aajtak.com'),
+  metadataBase: new URL('https://mychannelsabsetej.com'),
   alternates: {
     canonical: '/',
     languages: {
@@ -33,16 +33,16 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Aaj Tak - Your Trusted News Source",
-    description: "Stay updated with the latest breaking news, weather updates, and live coverage from Aaj Tak.",
-    url: 'https://aajtak.com',
-    siteName: 'Aaj Tak',
+    title: "My Channel Sabse Tej - Your Trusted News Source",
+    description: "Stay updated with the latest breaking news, weather updates, and live coverage from My Channel Sabse Tej.",
+    url: 'https://mychannelsabsetej.com',
+    siteName: 'My Channel Sabse Tej',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Aaj Tak News',
+        alt: 'My Channel Sabse Tej News',
       },
     ],
     locale: 'en_US',
@@ -50,8 +50,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Aaj Tak - Your Trusted News Source",
-    description: "Stay updated with the latest breaking news, weather updates, and live coverage from Aaj Tak.",
+    title: "My Channel Sabse Tej - Your Trusted News Source",
+    description: "Stay updated with the latest breaking news, weather updates, and live coverage from My Channel Sabse Tej.",
     images: ['/twitter-image.jpg'],
   },
   robots: {

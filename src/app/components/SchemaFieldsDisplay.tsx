@@ -46,14 +46,14 @@ export default async function SchemaFieldsDisplay() {
 
   // Use real data or fallback
   const entry: NewsChannelEntry = (mainEntry as NewsChannelEntry) || {
-    title: "Aaj Tak",
-    url: "https://aajtak.com",
+    title: "My Channel Sabse Tej",
+    url: "https://mychannelsabsetej.com",
     date: new Date().toISOString(),
     boolean: true,
     number: 24,
     link: { 
       title: "Watch Live Stream", 
-      url: "https://live.aajtak.com" 
+      url: "https://live.mychannelsabsetej.com" 
     },
     uid: "news_channel"
   };
@@ -104,7 +104,11 @@ export default async function SchemaFieldsDisplay() {
           <h3 className="font-bold text-xl text-gray-800 mb-2">📅 Date</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">ISO Date Format</p>
           <p className="text-purple-600 font-bold text-lg">
-            {entry.date ? new Date(entry.date).toLocaleDateString() : 'Not set'}
+                            {entry.date ? new Date(entry.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit'
+                }) : 'Not set'}
           </p>
         </div>
 

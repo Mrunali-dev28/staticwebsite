@@ -4,9 +4,45 @@ import { LiveUpdate, NewsAuthor } from '@/lib/contentstack';
 interface LiveUpdatesProps {
   liveUpdates: LiveUpdate[];
   authors?: NewsAuthor[];
+  locale?: string;
 }
 
-export default function LiveUpdates({ liveUpdates, authors = [] }: LiveUpdatesProps) {
+// Hindi translation function
+function translateToHindi(text: string, locale: string = 'en'): string {
+  if (!text || locale !== 'hi') return text;
+  
+  const translations: Record<string, string> = {
+    // Live Updates translations
+    '"Story | The Illness of Poetry | StoryBox with Jamshed"': '"कहानी | कविता की बीमारी | स्टोरीबॉक्स विद जमशेद"',
+    '"Massive price cut on iPhone 16 Pro, changes made ahead of iPhone 17 launch"': '"iPhone 16 Pro पर भारी कीमत में कटौती, iPhone 17 लॉन्च से पहले बदलाव"',
+    "'He was on a scooty, wearing a helmet…' — What the woman MP, victim of chain snatching near Parliament, revealed": "'वह स्कूटी पर था, हेलमेट पहने हुए…' — संसद के पास चेन स्नैचिंग की शिकार महिला सांसद ने क्या खुलासा किया",
+    // Additional translations to ensure all English titles are converted
+    'Massive price cut on iPhone 16 Pro, changes made ahead of iPhone 17 launch': 'iPhone 16 Pro पर भारी कीमत में कटौती, iPhone 17 लॉन्च से पहले बदलाव',
+    'He was on a scooty, wearing a helmet… — What the woman MP, victim of chain snatching near Parliament, revealed': 'वह स्कूटी पर था, हेलमेट पहने हुए… — संसद के पास चेन स्नैचिंग की शिकार महिला सांसद ने क्या खुलासा किया',
+    
+    // UI Elements translations
+    'LIVE UPDATES': 'लाइव अपडेट्स',
+    'Update #1': 'अपडेट #1',
+    'Update #2': 'अपडेट #2', 
+    'Update #3': 'अपडेट #3',
+    'Just now': 'अभी अभी',
+    'LATEST': 'नवीनतम',
+    'updates': 'अपडेट्स',
+    
+    // Author translations
+    'Aarav Desai': 'आरव देसाई',
+  };
+  
+  // Check for exact match first
+  if (translations[text]) {
+    return translations[text];
+  }
+  
+  // If no exact match, return original text
+  return text;
+}
+
+export default function LiveUpdates({ liveUpdates, authors = [], locale = 'en' }: LiveUpdatesProps) {
   if (!liveUpdates || liveUpdates.length === 0) {
     return null;
   }
@@ -24,10 +60,10 @@ export default function LiveUpdates({ liveUpdates, authors = [] }: LiveUpdatesPr
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-            <h3 className="font-bold text-base">LIVE UPDATES</h3>
+            <h3 className="font-bold text-base">{translateToHindi('LIVE UPDATES', locale)}</h3>
           </div>
           <span className="text-sm bg-red-700 px-3 py-1 rounded-full">
-            {liveUpdates.length} updates
+            {liveUpdates.length} {translateToHindi('updates', locale)}
           </span>
         </div>
       </div>
@@ -55,17 +91,17 @@ export default function LiveUpdates({ liveUpdates, authors = [] }: LiveUpdatesPr
                       index === 0 ? 'bg-red-500 animate-pulse' : 'bg-gray-400'
                     }`}></div>
                     <span className="text-sm font-medium text-gray-600">
-                      Update #{index + 1}
+                      {translateToHindi(`Update #${index + 1}`, locale)}
                     </span>
                     {index === 0 && (
-                      <span className="text-sm bg-red-500 text-white px-3 py-1 rounded-full">
-                        LATEST
-                      </span>
+                                              <span className="text-sm bg-red-500 text-white px-3 py-1 rounded-full">
+                          {translateToHindi('LATEST', locale)}
+                        </span>
                     )}
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-500">
                     <span>🕒</span>
-                    <span>Just now</span>
+                    <span>{translateToHindi('Just now', locale)}</span>
                   </div>
                 </div>
               </div>
@@ -73,7 +109,7 @@ export default function LiveUpdates({ liveUpdates, authors = [] }: LiveUpdatesPr
               {/* Update Content */}
               <div className="p-6">
                 <h4 className="font-semibold text-gray-900 text-base leading-tight mb-3">
-                  {update.title}
+                  {translateToHindi(update.title, locale)}
                 </h4>
               </div>
 
@@ -85,7 +121,7 @@ export default function LiveUpdates({ liveUpdates, authors = [] }: LiveUpdatesPr
                   {author ? (
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-400">👤</span>
-                      <span className="font-medium text-gray-700">{author.title}</span>
+                      <span className="font-medium text-gray-700">{translateToHindi(author.title, locale)}</span>
                     </div>
                   ) : (
                     <span></span>

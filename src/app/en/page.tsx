@@ -8,18 +8,22 @@ import {
   fetchNewsAuthors,
   fetchLiveUpdates,
   fetchTrending,
-  fetchLanguageSwitchButton
+  fetchLanguageSwitchButton,
+  fetchEmailSubscription,
+  fetchContactByUID
 } from '@/lib/contentstack-helpers';
 import Image from 'next/image';
-import { GlobalSetting, SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton } from '@/lib/contentstack';
+import { GlobalSetting, SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton, EmailSubscription, Contact } from '@/lib/contentstack';
 
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import BreakingAlertComponent from '../components/BreakingAlert';
 import NewsCategories from '../components/NewsCategories';
-
 import LiveUpdates from '../components/LiveUpdates';
 import NewsChannel from '../components/NewsChannel';
+import EmailSubscriptionComponent from '../components/EmailSubscription';
+import PersonalizedNewsWrapper from '../components/PersonalizedNewsWrapper';
+
 
 
 
@@ -48,7 +52,9 @@ export default async function EnglishHomePage() {
       liveUpdates,
       newsChannelEntries,
       trendingData,
-      languageSwitchButton
+      languageSwitchButton,
+      emailSubscription,
+      contactData
     ] = await Promise.all([
       fetchGlobalSettings(), // Use English global settings
       fetchSidebarNews(), // Use English sidebar news
@@ -58,7 +64,9 @@ export default async function EnglishHomePage() {
       fetchLiveUpdates(), // Use English live updates
       fetchAllNewsChannelEntries(), // Use English news channel entries
       fetchTrending(), // Use English trending data
-      fetchLanguageSwitchButton()
+      fetchLanguageSwitchButton(),
+      fetchEmailSubscription(),
+      fetchContactByUID('bltbfc790959321e33f')
     ]) as [
       GlobalSetting[],
       SidebarNews[],
@@ -68,8 +76,20 @@ export default async function EnglishHomePage() {
       LiveUpdate[],
       NewsChannelEntry[],
       Trending[],
-      LanguageSwitchButton | null
+      LanguageSwitchButton | null,
+      EmailSubscription | null,
+      Contact | null
     ];
+
+    // Debug trending data
+    console.log('🔍 UI Debug - Trending data received:', trendingData);
+    console.log('🔍 UI Debug - Trending data length:', trendingData?.length);
+    if (trendingData && trendingData.length > 0) {
+      console.log('🔍 UI Debug - First trending entry:', trendingData[0]);
+      console.log('🔍 UI Debug - Modular blocks:', trendingData[0].modular_blocks);
+      console.log('🔍 UI Debug - Embedded items:', trendingData[0]._embedded_items);
+      console.log('🔍 UI Debug - Entry keys:', Object.keys(trendingData[0]));
+    }
 
     // Fallback language switch button data for testing
     const fallbackLanguageSwitchButton: LanguageSwitchButton = {
@@ -129,37 +149,73 @@ export default async function EnglishHomePage() {
         <Header globalSettings={globalSettings} languageSwitchButton={displayLanguageSwitchButton} currentLanguage="ENGLISH" />
 
         {/* Breaking Alerts */}
-        <BreakingAlertComponent breakingAlerts={breakingAlerts} />
+        <BreakingAlertComponent breakingAlerts={breakingAlerts} locale="en" />
 
         {/* Main Content Area - English Version */}
         <main className="max-w-7xl mx-auto px-4 py-4">
           
           {/* Trending Topics */}
-          <div className="bg-gray-100 p-3 mb-4">
-            <div className="flex items-center space-x-4 text-sm">
-              <span className="font-semibold">Trending:</span>
-              {trendingData && trendingData.length > 0 && trendingData[0].modular_blocks ? (
-                trendingData[0].modular_blocks.map((block, index) => (
-                  block.link && (
-                    <a 
-                      key={block.link._metadata?.uid || index}
-                      href={block.link.href} 
-                      className="text-blue-600 hover:underline"
-                    >
-                      {block.link.title}
-                    </a>
-                  )
-                ))
-              ) : (
-                <>
-                  <a href="#" className="text-blue-600 hover:underline">Politics</a>
-                  <a href="#" className="text-blue-600 hover:underline">Sports</a>
-                  <a href="#" className="text-blue-600 hover:underline">Entertainment</a>
-                  <a href="#" className="text-blue-600 hover:underline">Technology</a>
-                </>
-              )}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-4">
+              <span className="font-bold text-gray-800 text-base whitespace-nowrap">🔥 Trending:</span>
+              <div className="flex items-center gap-3 flex-1">
+                {/* Debug: Show trending data info */}
+                {trendingData && trendingData.length > 0 ? (
+                  <>
+                    {/* Show actual trending data if available */}
+                    {trendingData[0].modular_blocks && trendingData[0].modular_blocks.length > 0 ? (
+                      trendingData[0].modular_blocks.map((block, index) => (
+                        block.link && (
+                          <div key={block.link._metadata?.uid || index} className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <a 
+                              href={block.link.href} 
+                              className="text-blue-600 hover:text-blue-800 font-semibold text-sm whitespace-nowrap"
+                              title={block.link.description}
+                            >
+                              {block.link.title}
+                            </a>
+                          </div>
+                        )
+                      ))
+                    ) : trendingData[0]._embedded_items && Object.keys(trendingData[0]._embedded_items).length > 0 ? (
+                      /* Show embedded items if available */
+                      Object.entries(trendingData[0]._embedded_items).map(([key, items]) => (
+                        items && items.length > 0 && items.map((item, index) => (
+                          <div key={`${key}_${index}`} className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <span className="text-blue-600 font-semibold text-sm whitespace-nowrap">
+                              {item.title || item.single_line || key}
+                            </span>
+                          </div>
+                        ))
+                      ))
+                    ) : (
+                      /* Show trending entry title if no modular blocks or embedded items */
+                      <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <span className="text-blue-600 font-semibold text-sm whitespace-nowrap">
+                          {trendingData[0].title || 'Trending News'}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <a href="/en/politics-news" className="text-red-600 hover:text-red-800 font-semibold text-sm whitespace-nowrap">🏛️ Politics</a>
+                    </div>
+                    <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <a href="/en/entertainment-news" className="text-purple-600 hover:text-purple-800 font-semibold text-sm whitespace-nowrap">🎬 Entertainment</a>
+                    </div>
+                    <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <a href="/en/technology-news" className="text-blue-600 hover:text-blue-800 font-semibold text-sm whitespace-nowrap">💻 Technology</a>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
+
+                      {/* Personalized News - Between Trending and News Layout */}
+            <PersonalizedNewsWrapper locale="en" />
 
           {/* Three Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -167,7 +223,7 @@ export default async function EnglishHomePage() {
             {/* Left Column - News Channel */}
             <div className="lg:col-span-3">
               <div className="bg-white rounded-lg shadow p-4">
-                <NewsChannel newsChannelEntries={newsChannelEntries} />
+                <NewsChannel newsChannelEntries={newsChannelEntries} locale="en" />
               </div>
             </div>
 
@@ -176,12 +232,12 @@ export default async function EnglishHomePage() {
               <div className="space-y-4">
                 {/* Sidebar News */}
                 <div className="bg-white rounded-lg shadow p-4">
-                  <Sidebar sidebarNews={sidebarNews} />
+                  <Sidebar sidebarNews={sidebarNews} locale="en" />
                 </div>
                 
                 {/* News Categories - Below Latest News */}
                 <div className="bg-white rounded-lg shadow p-4">
-                  <NewsCategories newsCategories={displayNewsCategories} />
+                  <NewsCategories newsCategories={displayNewsCategories} locale="en" />
                 </div>
               </div>
             </div>
@@ -191,7 +247,7 @@ export default async function EnglishHomePage() {
               <div className="space-y-4">
                 {/* Live Updates */}
                 <div className="bg-white rounded-lg shadow p-4">
-                  <LiveUpdates liveUpdates={liveUpdates} authors={newsAuthors} />
+                  <LiveUpdates liveUpdates={liveUpdates} authors={newsAuthors} locale="en" />
                 </div>
               </div>
             </div>
@@ -236,7 +292,7 @@ export default async function EnglishHomePage() {
                         <span className="text-white font-bold">AT</span>
                       </div>
                       <div>
-                        <p className="font-semibold">Aaj Tak News Team</p>
+                        <p className="font-semibold">My Channel Sabse Tej News Team</p>
                         <p className="text-sm text-gray-300">Dedicated to bringing you the latest news and updates</p>
                       </div>
                     </div>
@@ -248,16 +304,34 @@ export default async function EnglishHomePage() {
               <div className="flex-1 text-right">
                 <h3 className="text-xl font-bold mb-4">Contact Us</h3>
                 <div className="space-y-2 text-sm">
-                  <p>Email: news@aajtak.com</p>
-                  <p>Phone: +91-11-1234-5678</p>
-                  <p>Address: News Complex, New Delhi</p>
+                  {contactData ? (
+                    <>
+                      <h4 className="font-semibold">{contactData.title}</h4>
+                      {contactData.rich_text_editor && (
+                        <div dangerouslySetInnerHTML={{ __html: contactData.rich_text_editor }} />
+                      )}
+                      {contactData.single_line && <p>{contactData.single_line}</p>}
+                    </>
+                  ) : (
+                    <>
+                      <p>Email: news@mychannelsabsetej.com</p>
+                      <p>Phone: +91-11-1234-5678</p>
+                      <p>Address: News Complex, New Delhi</p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
             
+                         {/* Email Subscription */}
+             <div className="mt-8">
+               <EmailSubscriptionComponent emailSubscriptionData={emailSubscription} />
+             </div>
+
+            
             {/* Copyright */}
             <div className="border-t border-gray-700 mt-6 pt-6 text-center">
-              <p>&copy; 2024 Aaj Tak. All rights reserved.</p>
+              <p>&copy; 2024 My Channel Sabse Tej. All rights reserved.</p>
             </div>
           </div>
         </footer>

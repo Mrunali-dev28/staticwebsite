@@ -8,22 +8,27 @@ import {
   fetchHindiBreakingAlerts,
   fetchHindiLiveUpdates,
   fetchHindiTrending,
-  fetchHindiNewsChannelEntries
+  fetchHindiNewsChannelEntries,
+  fetchHindiEmailSubscription,
+  fetchHindiGlobalSettings,
+  fetchContactByUID
 } from '@/lib/contentstack-helpers';
-import { SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton } from '@/lib/contentstack';
+import { SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton, EmailSubscription, GlobalSetting, Contact } from '@/lib/contentstack';
 
 import Header from '../components/Header';
 import NewsChannel from '../components/NewsChannel';
 import Sidebar from '../components/Sidebar';
 import NewsCategories from '../components/NewsCategories';
-
 import LiveUpdates from '../components/LiveUpdates';
 import BreakingAlertComponent from '../components/BreakingAlert';
+import PersonalizedNewsWrapper from '../components/PersonalizedNewsWrapper';
+import EmailSubscriptionComponent from '../components/EmailSubscription';
 
 export default async function HindiHomePage() {
   try {
-    // NEW: Use the universal function for all Hindi content
+    // Fetch all Hindi content
     const [
+      globalSettings,
       sidebarNews,
       breakingAlerts,
       newsCategories,
@@ -31,8 +36,11 @@ export default async function HindiHomePage() {
       liveUpdates,
       newsChannelEntries,
       trendingData,
-      languageSwitchButton
+      languageSwitchButton,
+      emailSubscription,
+      contactData
     ] = await Promise.all([
+      fetchHindiGlobalSettings(),
       fetchHindiSidebarNews(),
       fetchHindiBreakingAlerts(),
       fetchHindiNewsCategories(),
@@ -40,8 +48,11 @@ export default async function HindiHomePage() {
       fetchHindiLiveUpdates(),
       fetchHindiNewsChannelEntries(),
       fetchHindiTrending(),
-      fetchLanguageSwitchButton()
+      fetchLanguageSwitchButton(),
+      fetchHindiEmailSubscription(),
+      fetchContactByUID('bltbfc790959321e33f')
     ]) as [
+      GlobalSetting[],
       SidebarNews[],
       BreakingAlert[],
       NewsCategory[],
@@ -49,68 +60,10 @@ export default async function HindiHomePage() {
       LiveUpdate[],
       Trending[],
       Trending[],
-      LanguageSwitchButton | null
+      LanguageSwitchButton | null,
+      EmailSubscription | null,
+      Contact | null
     ];
-
-    // Debug: Log what content is being fetched
-    console.log('DEBUG - Sidebar News Content:', sidebarNews.map(item => ({
-      title: item.title,
-      descrption: item.descrption
-    })));
-    console.log('DEBUG - Live Updates Content:', liveUpdates.map(item => ({
-      title: item.title
-    })));
-    console.log('DEBUG - Breaking Alerts Content:', breakingAlerts.map(item => ({
-      title: item.title,
-      rich_text_editor: item.rich_text_editor
-    })));
-    console.log('DEBUG - News Categories Content:', newsCategories.map(item => ({
-      title: item.title,
-      uid: item.uid
-    })));
-    console.log('DEBUG - Language Switch Button:', languageSwitchButton);
-
-    // Check if content is in Hindi or English
-    const isHindiContent = (text: string): boolean => {
-      if (!text) return false;
-      const hindiRegex = /[\u0900-\u097F]/;
-      return hindiRegex.test(text);
-    };
-
-    // Log content language detection
-    sidebarNews.forEach((item, index) => {
-      console.log(`Sidebar News ${index + 1}:`, {
-        title: item.title,
-        isHindi: isHindiContent(item.title),
-        descrption: item.descrption,
-        isHindiDesc: isHindiContent(item.descrption || '')
-      });
-    });
-
-    // Force Hindi content for now (temporary fix)
-    const hindiSidebarNews = sidebarNews.map(item => ({
-      ...item,
-      title: item.title.includes('Modi') ? '"मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?"' : item.title,
-      descrption: item.descrption?.includes('Modi') ? '<strong>मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?</strong><br/>मानसून सत्र के दौरान, प्रधानमंत्री नरेंद्र मोदी और गृह मंत्री अमित शाह ने एक ही दिन राष्ट्रपति द्रौपदी मुर्मू से मुलाकात की।' : item.descrption
-    }));
-
-    const hindiLiveUpdates = liveUpdates.map(item => ({
-      ...item,
-      title: item.title.includes('Story') ? '"कहानी | कविता की बीमारी | स्टोरीबॉक्स विद जमशेद"' : 
-             item.title.includes('iPhone') ? '"iPhone 16 Pro पर भारी छूट, iPhone 17 लॉन्च से पहले बदलाव"' :
-             item.title.includes('scooty') ? '"वह स्कूटी पर था, हेलमेट पहने हुए... — महिला सांसद ने क्या बताया"' : item.title
-    }));
-
-    const hindiBreakingAlerts = breakingAlerts.map(item => ({
-      ...item,
-      title: item.title.includes('Monsoon') ? 'मानसून बाढ़ अलर्ट' : item.title,
-      rich_text_editor: item.rich_text_editor?.includes('Heavy rain') ? '<p>⚠️ मुंबई और पुणे के लिए भारी बारिश की चेतावनी। घर के अंदर रहें।</p>' : item.rich_text_editor
-    }));
-
-    const hindiNewsChannelEntries = newsChannelEntries.map(item => ({
-      ...item,
-      title: item.title?.includes('Heavy Rain') ? '"दिल्ली में भारी बारिश: अलर्ट जारी"' : item.title
-    }));
 
     // Fallback language switch button data for Hindi
     const fallbackHindiLanguageSwitchButton: LanguageSwitchButton = {
@@ -135,71 +88,92 @@ export default async function HindiHomePage() {
       ]
     };
 
-    // Fallback Hindi news categories if none found
-    const fallbackHindiNewsCategories = [
-      {
-        uid: 'hindi-sports',
-        title: 'खेल',
-        rich_text_editor: 'क्रिकेट, फुटबॉल, टेनिस और अन्य खेलों की ताज़ा खबरें',
-        url: '#',
-        file: {
-          filename: 'sports-hindi.jpg',
-          url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop'
-        }
-      }
-    ];
-
-    // Use Hindi content with fallback
+    // Use Hindi content directly (translations are handled in helper functions)
     const displayLanguageSwitchButton = languageSwitchButton || fallbackHindiLanguageSwitchButton;
-    const displaySidebarNews = hindiSidebarNews;
-    const displayBreakingAlerts = hindiBreakingAlerts;
-    const displayNewsCategories = newsCategories && newsCategories.length > 0 ? newsCategories : fallbackHindiNewsCategories;
+    const displaySidebarNews = sidebarNews;
+    const displayBreakingAlerts = breakingAlerts;
+    const displayNewsCategories = newsCategories;
     const displayNewsAuthors = newsAuthors;
-    const displayLiveUpdates = hindiLiveUpdates;
+    
+    // Simple fix: Only show first 2 updates for Hindi page
+    const displayLiveUpdates = liveUpdates.slice(0, 2);
+    
     const displayTrending = trendingData;
-    const displayNewsChannelEntries = hindiNewsChannelEntries;
+    const displayNewsChannelEntries = newsChannelEntries;
 
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <Header 
-          globalSettings={[]}
+          globalSettings={globalSettings}
           languageSwitchButton={displayLanguageSwitchButton || undefined}
           currentLanguage="Hindi"
         />
 
         {/* Breaking Alerts */}
-        <BreakingAlertComponent breakingAlerts={displayBreakingAlerts} />
+        <BreakingAlertComponent breakingAlerts={displayBreakingAlerts} locale="hi" />
 
         {/* Main Content Area - Hindi Version */}
         <main className="max-w-7xl mx-auto px-4 py-4">
           
           {/* Trending Topics */}
-          <div className="bg-gray-100 p-3 mb-4">
-            <div className="flex items-center space-x-4 text-sm">
-              <span className="font-semibold">ट्रेंडिंग:</span>
-              {displayTrending && displayTrending.length > 0 && displayTrending[0].modular_blocks ? (
-                displayTrending[0].modular_blocks.map((block, index) => (
-                  block.link && (
-                    <a 
-                      key={block.link._metadata?.uid || index}
-                      href={block.link.href} 
-                      className="text-blue-600 hover:underline"
-                    >
-                      {block.link.title}
-                    </a>
-                  )
-                ))
-              ) : (
-                <>
-                  <a href="#" className="text-blue-600 hover:underline">राजनीति</a>
-                  <a href="#" className="text-blue-600 hover:underline">खेल</a>
-                  <a href="#" className="text-blue-600 hover:underline">मनोरंजन</a>
-                  <a href="#" className="text-blue-600 hover:underline">तकनीक</a>
-                </>
-              )}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-4">
+              <span className="font-bold text-gray-800 text-base whitespace-nowrap">🔥 ट्रेंडिंग:</span>
+              <div className="flex items-center gap-3 flex-1">
+                {displayTrending && displayTrending.length > 0 ? (
+                  <>
+                    {displayTrending[0].modular_blocks && displayTrending[0].modular_blocks.length > 0 ? (
+                      displayTrending[0].modular_blocks.map((block, index) => (
+                        block.link && (
+                          <div key={block.link._metadata?.uid || index} className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <a 
+                              href={block.link.href} 
+                              className="text-blue-600 hover:text-blue-800 font-semibold text-sm whitespace-nowrap"
+                              title={block.link.description}
+                            >
+                              {block.link.title}
+                            </a>
+                          </div>
+                        )
+                      ))
+                    ) : displayTrending[0]._embedded_items && Object.keys(displayTrending[0]._embedded_items).length > 0 ? (
+                      Object.entries(displayTrending[0]._embedded_items).map(([key, items]) => (
+                        items && items.length > 0 && items.map((item, index) => (
+                          <div key={`${key}_${index}`} className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <span className="text-blue-600 font-semibold text-sm whitespace-nowrap">
+                              {item.title || item.single_line || key}
+                            </span>
+                          </div>
+                        ))
+                      ))
+                    ) : (
+                      <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <span className="text-blue-600 font-semibold text-sm whitespace-nowrap">
+                          {displayTrending[0].title || 'ट्रेंडिंग समाचार'}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <a href="/hi/politics-news" className="text-red-600 hover:text-red-800 font-semibold text-sm whitespace-nowrap">🏛️ राजनीति</a>
+                    </div>
+                    <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <a href="/hi/entertainment-news" className="text-purple-600 hover:text-purple-800 font-semibold text-sm whitespace-nowrap">🎬 मनोरंजन</a>
+                    </div>
+                    <div className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <a href="/hi/technology-news" className="text-blue-600 hover:text-blue-800 font-semibold text-sm whitespace-nowrap">💻 तकनीक</a>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Personalized News */}
+          <PersonalizedNewsWrapper locale="hi" />
 
           {/* Three Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -207,7 +181,7 @@ export default async function HindiHomePage() {
             {/* Left Column - News Channel */}
             <div className="lg:col-span-3">
               <div className="bg-white rounded-lg shadow p-4">
-                <NewsChannel newsChannelEntries={displayNewsChannelEntries} />
+                <NewsChannel newsChannelEntries={displayNewsChannelEntries} locale="hi" />
               </div>
             </div>
 
@@ -216,12 +190,12 @@ export default async function HindiHomePage() {
               <div className="space-y-4">
                 {/* Sidebar News */}
                 <div className="bg-white rounded-lg shadow p-4">
-                  <Sidebar sidebarNews={displaySidebarNews} />
+                  <Sidebar sidebarNews={displaySidebarNews} locale="hi" />
                 </div>
                 
-                {/* News Categories - Below Latest News */}
+                {/* News Categories */}
                 <div className="bg-white rounded-lg shadow p-4">
-                  <NewsCategories newsCategories={displayNewsCategories} />
+                  <NewsCategories newsCategories={displayNewsCategories} locale="hi" />
                 </div>
               </div>
             </div>
@@ -231,7 +205,7 @@ export default async function HindiHomePage() {
               <div className="space-y-4">
                 {/* Live Updates */}
                 <div className="bg-white rounded-lg shadow p-4">
-                  <LiveUpdates liveUpdates={displayLiveUpdates} authors={displayNewsAuthors} />
+                  <LiveUpdates liveUpdates={displayLiveUpdates} authors={displayNewsAuthors} locale="hi" />
                 </div>
               </div>
             </div>
@@ -316,45 +290,62 @@ export default async function HindiHomePage() {
                 )}
               </div>
 
-              {/* Contact Information - Right Corner */}
+              {/* Contact Information */}
               <div className="text-right">
                 <h3 className="text-xl font-bold mb-4">संपर्क</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-end space-x-3">
-                    <div>
-                      <div className="text-sm font-medium text-white">ईमेल</div>
-                      <div className="text-xs text-gray-400">info@aajtaknews.com</div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                      <span className="text-white text-xs">📧</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-end space-x-3">
-                    <div>
-                      <div className="text-sm font-medium text-white">फोन</div>
-                      <div className="text-xs text-gray-400">+1 (888) 888-6786</div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
-                      <span className="text-white text-xs">📞</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-end space-x-3">
-                    <div>
-                      <div className="text-sm font-medium text-white">पता</div>
-                      <div className="text-xs text-gray-400">123 न्यूज़ स्ट्रीट, मीडिया सिटी</div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                      <span className="text-white text-xs">📍</span>
-                    </div>
-                  </div>
+                  {contactData ? (
+                    <>
+                      <h4 className="text-sm font-medium text-white">{contactData.title}</h4>
+                      {contactData.rich_text_editor && (
+                        <div className="text-xs text-gray-400" dangerouslySetInnerHTML={{ __html: contactData.rich_text_editor }} />
+                      )}
+                      {contactData.single_line && <p className="text-xs text-gray-400">{contactData.single_line}</p>}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-end space-x-3">
+                        <div>
+                          <div className="text-sm font-medium text-white">ईमेल</div>
+                          <div className="text-xs text-gray-400">info@mychannelsabsetej.com</div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                          <span className="text-white text-xs">📧</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end space-x-3">
+                        <div>
+                          <div className="text-sm font-medium text-white">फोन</div>
+                          <div className="text-xs text-gray-400">+1 (888) 888-6786</div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
+                          <span className="text-white text-xs">📞</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end space-x-3">
+                        <div>
+                          <div className="text-sm font-medium text-white">पता</div>
+                          <div className="text-xs text-gray-400">123 न्यूज़ स्ट्रीट, मीडिया सिटी</div>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
+                          <span className="text-white text-xs">📍</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
             </div>
 
+            {/* Email Subscription */}
+            <div className="mt-8">
+              <EmailSubscriptionComponent emailSubscriptionData={emailSubscription} />
+            </div>
+
             {/* Copyright */}
             <div className="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
-              <p>&copy; 2024 आज तक। सर्वाधिकार सुरक्षित।</p>
+              <p>&copy; 2024 मेरा चैनल सबसे तेज। सर्वाधिकार सुरक्षित।</p>
             </div>
           </div>
         </footer>
@@ -363,7 +354,6 @@ export default async function HindiHomePage() {
   } catch (error) {
     console.error('Error loading Hindi page:', error);
     
-    // Error fallback UI with Hindi content
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
