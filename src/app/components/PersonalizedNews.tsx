@@ -1,8 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { usePersonalize } from '@/lib/use-personalize';
-import { fetchLocationSpecificNews, fetchLocationTrendingNews, fetchHindiLiveUpdates, fetchLiveUpdates } from '@/lib/contentstack-helpers';
-import { getAllVariantsWithFallback, fetchUSNewsEntry, fetchUSNewsEntryHindi } from '@/lib/personalize-service';
+import { fetchLocationSpecificNews, fetchLocationTrendingNews, fetchHindiLiveUpdates, fetchLiveUpdates, fetchTrendingFromAnySource } from '@/lib/contentstack-helpers';
+import { fetchUSNewsEntry, fetchUSNewsEntryHindi } from '@/lib/personalize-service';
 
 interface PersonalizedNewsProps {
   locale?: 'en' | 'hi';
@@ -36,67 +36,6 @@ export default function PersonalizedNews({ locale = 'en' }: PersonalizedNewsProp
   
   const { city, region, manifest, isLoading, error, trackImpression } = personalizeData || {};
   
-
-  
-  // Handle hook errors gracefully
-  if (!personalizeData) {
-    console.error('Error initializing usePersonalize');
-    // Return fallback content if hook fails
-    return (
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
-        <h3 className="text-lg font-bold mb-3 text-gray-800 border-b border-blue-200 pb-2">
-          {locale === 'hi' ? 'महाराष्ट्र के लिए हाइलाइटेड समाचार' : 'Highlighted News for Maharashtra'}
-        </h3>
-        <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              <img 
-                src="https://via.placeholder.com/300x200/0066cc/ffffff?text=Rain+Alert" 
-                alt="Rain Alert"
-                className="w-16 h-12 object-cover rounded"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">
-                MH - Heavy Rain Hits Pune: Alerts Issued
-              </h4>
-              <p className="text-xs text-gray-600">
-                Heavy rainfall in Pune has led to flood alerts being issued across the city. Authorities have advised residents to stay indoors and avoid low-lying areas.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Add error boundary for runtime errors
-  if (error) {
-    console.error('PersonalizedNews error:', error);
-    return (
-      <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
-        <div className="text-red-600 text-center py-2 text-sm">
-          {locale === 'hi' ? 'समाचार लोड करने में त्रुटि' : 'Error loading news'}
-        </div>
-      </div>
-    );
-  }
-
-
-
-  const getLocationTitle = () => {
-    if (region === 'maharashtra') {
-      return locale === 'hi' ? 'महाराष्ट्र के लिए हाइलाइटेड समाचार' : 'Highlighted News for Maharashtra';
-    } else if (region === 'delhi') {
-      return locale === 'hi' ? 'दिल्ली के लिए हाइलाइटेड समाचार' : 'Highlighted News for Delhi';
-    } else if (region === 'us') {
-      return locale === 'hi' ? 'अमेरिका के लिए हाइलाइटेड समाचार' : 'Highlighted News for US';
-    } else if (region === 'local') {
-      return locale === 'hi' ? 'स्थानीय हाइलाइटेड समाचार' : 'Local Highlighted News';
-    }
-    return locale === 'hi' ? 'हाइलाइटेड समाचार' : 'Highlighted News';
-  };
-
   // Get personalized content from variants AND location-specific news from CMS
   useEffect(() => {
     const fetchContent = async () => {
@@ -192,118 +131,107 @@ export default function PersonalizedNews({ locale = 'en' }: PersonalizedNewsProp
           try {
             // For US region, ONLY fetch the specific US news entry - no fallback content
             if (region === 'us') {
-              console.log('🇺🇸 US region detected, fetching US news entry only...');
-              const usNewsEntry = locale === 'hi' ? 
-                await fetchUSNewsEntryHindi() : 
-                await fetchUSNewsEntry();
-              
-              if (usNewsEntry && usNewsEntry.content) {
-                console.log('✅ US news entry found:', usNewsEntry.content);
-                personalizedContent.push({
-                  uid: `us_news_${usNewsEntry.id}`,
-                  title: usNewsEntry.content.title || 'US News',
-                  news: {
-                    description: usNewsEntry.content.description || 'Latest news from the United States',
-                    link: usNewsEntry.content.link || '#'
-                  },
-                  file: usNewsEntry.content.image ? { url: usNewsEntry.content.image } : {
-                    url: 'https://via.placeholder.com/300x200/0066cc/ffffff?text=US+News'
-                  }
-                });
-                console.log('✅ Added US news entry to personalized content');
-              } else {
-                console.log('❌ US news entry not found, showing empty content for US region');
-              }
+              console.log('🇺🇸 US region: No fallback content needed, using only US news entry');
             } else {
-              // For non-US regions, use the existing fallback logic
-              console.log('🌍 Non-US region detected, using fallback content...');
-              
-              // Try to get variants with fallback to Contentstack
-              const fallbackVariants = await getAllVariantsWithFallback();
-              console.log('📋 Fallback variants found:', fallbackVariants.length);
-              
-              // Process all fallback variants dynamically
-              for (const variant of fallbackVariants) {
-                if (variant.content) {
-                  // Translate content based on locale
-                  const title = locale === 'hi' ? 
-                    (variant.content.title ? translateToHindi(variant.content.title) : 'व्यक्तिगत समाचार') : 
-                    (variant.content.title || 'Personalized News');
-                  
-                  const description = locale === 'hi' ? 
-                    (variant.content.description ? translateToHindi(variant.content.description) : 'Contentstack से व्यक्तिगत सामग्री') : 
-                    (variant.content.description || 'Personalized content from Contentstack fallback');
-                  
-                  personalizedContent.push({
-                    uid: `fallback_${variant.id}`,
-                    title: title,
-                    news: {
-                      description: description,
-                      link: variant.content.link || '#'
-                    },
-                    file: variant.content.image ? { url: variant.content.image } : {
-                      url: 'https://via.placeholder.com/300x200/0066cc/ffffff?text=Personalized'
-                    }
-                  });
-                }
+              // For other regions, try to fetch fallback content from Contentstack
+              const fallbackContent = await fetchTrendingFromAnySource();
+              if (fallbackContent && fallbackContent.length > 0) {
+                console.log('✅ Fallback content found from Contentstack:', fallbackContent.length);
+                const fallbackNews = fallbackContent.slice(0, 3).map((item: any) => ({
+                  uid: `fallback_${item.uid}`,
+                  title: item.title || 'Latest News',
+                  news: {
+                    description: item.modular_blocks?.[0]?.link?.description || '',
+                    link: item.modular_blocks?.[0]?.link?.href || '#'
+                  },
+                  file: undefined
+                }));
+                setPersonalizedNews(fallbackNews);
+              } else {
+                console.log('❌ No fallback content available from Contentstack');
               }
-              
-              console.log(`✅ Added ${personalizedContent.length} fallback variants for non-US region`);
             }
-          } catch (error) {
-            console.error('Error fetching fallback variants:', error);
+          } catch (fallbackError) {
+            console.error('❌ Error fetching fallback content:', fallbackError);
           }
+        } else {
+          // Set personalized content
+          setPersonalizedNews(personalizedContent);
         }
         
-        // 4. If still no content, fetch from live_updates with proper locale
-        if (personalizedContent.length === 0 && locationNews.length === 0) {
-          console.log('🔄 No content found, fetching from live_updates with locale:', locale);
-          try {
-            const liveUpdates = await fetchLiveUpdatesWithLocale(locale);
-            console.log('📋 Live updates found:', liveUpdates.length);
-            
-            for (const update of liveUpdates.slice(0, 2)) {
-              const updateData = update as any;
-              const title = locale === 'hi' ? 
-                (updateData.title ? translateToHindi(updateData.title) : 'लाइव अपडेट') : 
-                (updateData.title || 'Live Update');
-              
-              const description = locale === 'hi' ? 
-                (updateData.description ? translateToHindi(updateData.description) : 'ताजा समाचार अपडेट') : 
-                (updateData.description || 'Latest news update');
-              
-              personalizedContent.push({
-                uid: `live_${updateData.uid || Date.now()}`,
-                title: title,
-                news: {
-                  description: description,
-                  link: '#'
-                },
-                file: {
-                  url: 'https://via.placeholder.com/300x200/0066cc/ffffff?text=Live+Update'
-                }
-              });
-            }
-            
-            console.log(`✅ Added ${personalizedContent.length} live updates`);
-          } catch (error) {
-            console.error('Error fetching live updates:', error);
-          }
-        }
+        // Set location-specific news
+        setLocationNews([...newsData, ...trendingData]);
         
-        setLocationNews(newsData as NewsItem[]);
-        setPersonalizedNews(personalizedContent);
-        
-        console.log(`✅ Fetched ${personalizedContent.length} personalized variants and ${newsData.length} location news items for ${location}`);
       } catch (error) {
-        console.error('Error fetching content:', error);
+        console.error('❌ Error fetching personalized content:', error);
       } finally {
         setIsLoadingNews(false);
       }
     };
 
     fetchContent();
-  }, [region, manifest, trackImpression, locale]);
+  }, [region, manifest, locale, trackImpression]);
+  
+  // Handle hook errors gracefully
+  if (!personalizeData) {
+    console.error('Error initializing usePersonalize');
+    // Return fallback content if hook fails
+    return (
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
+        <h3 className="text-lg font-bold mb-3 text-gray-800 border-b border-blue-200 pb-2">
+          {locale === 'hi' ? 'महाराष्ट्र के लिए हाइलाइटेड समाचार' : 'Highlighted News for Maharashtra'}
+        </h3>
+        <div className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <img 
+                src="https://via.placeholder.com/300x200/0066cc/ffffff?text=Rain+Alert" 
+                alt="Rain Alert"
+                className="w-16 h-12 object-cover rounded"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                MH - Heavy Rain Hits Pune: Alerts Issued
+              </h4>
+              <p className="text-xs text-gray-600">
+                Heavy rainfall in Pune has led to flood alerts being issued across the city. Authorities have advised residents to stay indoors and avoid low-lying areas.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Add error boundary for runtime errors
+  if (error) {
+    console.error('PersonalizedNews error:', error);
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
+        <div className="text-red-600 text-center py-2 text-sm">
+          {locale === 'hi' ? 'समाचार लोड करने में त्रुटि' : 'Error loading news'}
+        </div>
+      </div>
+    );
+  }
+
+
+
+  const getLocationTitle = () => {
+    if (region === 'maharashtra') {
+      return locale === 'hi' ? 'महाराष्ट्र के लिए हाइलाइटेड समाचार' : 'Highlighted News for Maharashtra';
+    } else if (region === 'delhi') {
+      return locale === 'hi' ? 'दिल्ली के लिए हाइलाइटेड समाचार' : 'Highlighted News for Delhi';
+    } else if (region === 'us') {
+      return locale === 'hi' ? 'अमेरिका के लिए हाइलाइटेड समाचार' : 'Highlighted News for US';
+    } else if (region === 'local') {
+      return locale === 'hi' ? 'स्थानीय हाइलाइटेड समाचार' : 'Local Highlighted News';
+    }
+    return locale === 'hi' ? 'हाइलाइटेड समाचार' : 'Highlighted News';
+  };
+
+
 
   // Simple Hindi translation function
   const translateToHindi = (text: string): string => {

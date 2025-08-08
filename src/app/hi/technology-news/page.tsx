@@ -3,8 +3,6 @@ import Link from 'next/link';
 import {
   fetchHindiSidebarNews,
   fetchHindiBreakingAlerts,
-  fetchHindiNewsAuthors,
-  fetchHindiNewsChannelEntries,
   fetchHindiLiveUpdates,
   fetchHindiNewsCategories,
   fetchHindiEmailSubscription
