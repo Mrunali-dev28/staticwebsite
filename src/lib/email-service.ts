@@ -2,17 +2,29 @@ import nodemailer from 'nodemailer';
 
 // Email configuration
 const EMAIL_CONFIG = {
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.EMAIL_PORT || '587'),
+  secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
   auth: {
-    user: process.env.EMAIL_USER || 'your-email@gmail.com',
-    pass: process.env.EMAIL_PASS || 'your-app-password'
+    user: process.env.EMAIL_USER || '',
+    pass: process.env.EMAIL_PASS || ''
   }
+};
+
+// Validate email configuration
+const validateEmailConfig = () => {
+  if (!EMAIL_CONFIG.auth.user || !EMAIL_CONFIG.auth.pass) {
+    console.warn('⚠️ Email configuration incomplete. EMAIL_USER and EMAIL_PASS environment variables are required.');
+    return false;
+  }
+  return true;
 };
 
 // Create transporter
 const createTransporter = () => {
+  if (!validateEmailConfig()) {
+    throw new Error('Email configuration is incomplete. Please set EMAIL_USER and EMAIL_PASS environment variables.');
+  }
   return nodemailer.createTransport(EMAIL_CONFIG);
 };
 

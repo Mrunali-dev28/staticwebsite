@@ -67,6 +67,11 @@ export interface SidebarNews {
     filename: string;
   };
   descrption?: string;
+  url?: string;
+  link?: {
+    title: string;
+    url: string;
+  };
 }
 
 export interface NewsCategory {

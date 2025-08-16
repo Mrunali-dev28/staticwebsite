@@ -11,7 +11,8 @@ import {
   fetchHindiNewsChannelEntries,
   fetchHindiEmailSubscription,
   fetchHindiGlobalSettings,
-  fetchContactByUID
+  fetchContactByUID,
+  translateToHindi
 } from '@/lib/contentstack-helpers';
 import { SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton, EmailSubscription, GlobalSetting, Contact } from '@/lib/contentstack';
 
@@ -24,7 +25,18 @@ import BreakingAlertComponent from '../components/BreakingAlert';
 import PersonalizedNewsWrapper from '../components/PersonalizedNewsWrapper';
 import EmailSubscriptionComponent from '../components/EmailSubscription';
 
+// Add ISR configuration for automatic revalidation
+export const revalidate = 10; // Revalidate every 10 seconds for faster updates
+
 export default async function HindiHomePage() {
+  // Add cache busting timestamp
+  const timestamp = Date.now();
+  
+  // Add cache control headers
+  const headers = {
+    'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+  };
+  
   try {
     // Fetch all Hindi content
     const [
@@ -173,7 +185,7 @@ export default async function HindiHomePage() {
           </div>
 
           {/* Personalized News */}
-          <PersonalizedNewsWrapper locale="hi" />
+          <PersonalizedNewsWrapper locale="hi" newsChannelEntries={displayNewsChannelEntries} />
 
           {/* Three Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -181,7 +193,11 @@ export default async function HindiHomePage() {
             {/* Left Column - News Channel */}
             <div className="lg:col-span-3">
               <div className="bg-white rounded-lg shadow p-4">
-                <NewsChannel newsChannelEntries={displayNewsChannelEntries} locale="hi" />
+                <NewsChannel 
+                  newsChannelEntries={displayNewsChannelEntries} 
+                  locale="hi" 
+                  key={`news-channel-${timestamp}`}
+                />
               </div>
             </div>
 
@@ -239,10 +255,10 @@ export default async function HindiHomePage() {
                           </div>
                         )}
                         <div>
-                          <div className="text-sm font-medium text-white">{author.title}</div>
+                          <div className="text-sm font-medium text-white">{translateToHindi(author.title, 'hi')}</div>
                           {author.rich_text_editor && (
                             <div className="text-xs text-gray-400 line-clamp-2">
-                              {author.rich_text_editor.replace(/<[^>]*>/g, '')}
+                              {translateToHindi(author.rich_text_editor.replace(/<[^>]*>/g, ''), 'hi')}
                             </div>
                           )}
                         </div>

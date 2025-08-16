@@ -105,12 +105,37 @@ src/
    ```
 
 2. **Set up environment variables**:
-   Create a `.env.local` file with:
+   Create a `.env.local` file with the following variables:
+
+   ```bash
+   # Contentstack Configuration
+   NEXT_PUBLIC_CONTENTSTACK_API_KEY=your_contentstack_api_key_here
+   NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN=your_contentstack_delivery_token_here
+   NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT=production
+
+   # Personalize Edge Configuration
+   NEXT_PUBLIC_PERSONALISE_EDGE_PROJECT_UID=6891ff716f1a09b09e904b21
+   NEXT_PUBLIC_PERSONALISE_EDGE=https://personalize.contentstack.com
+
+   # Lytics Configuration
+   NEXT_PUBLIC_LYTICS_TAG_ID=d47835afc82093e811b7b2e88bf93d68
+
+   # Email Configuration
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_SECURE=false
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASS=your-app-password
+
+   # Default Entry UID (for development/testing)
+   NEXT_PUBLIC_DEFAULT_ENTRY_UID=blt0171967259c79e5c
+
+   # Site Configuration
+   NEXT_PUBLIC_SITE_URL=https://mychannelsabsetej.com
+   NEXT_PUBLIC_SITE_NAME=My Channel Sabse Tej
    ```
-   NEXT_PUBLIC_CONTENTSTACK_API_KEY=your_api_key
-   NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN=your_delivery_token
-   NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT=your_environment
-   ```
+
+   **Note**: Copy `env.example` to `.env.local` and fill in your actual values.
 
 3. **Run development server**:
    ```bash

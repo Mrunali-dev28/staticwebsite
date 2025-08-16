@@ -100,13 +100,18 @@ export async function fetchTaxonomies() {
 export async function fetchAllNewsChannelEntries() {
   try {
     console.log('Fetching all news channel entries...');
+    
+    // Add cache busting parameter
+    const timestamp = Date.now();
     const response = await deliverySDK
       .contentType('news_channel')
       .entry()
       .includeReference(['reference'])
       .includeEmbeddedItems()
       .includeFallback()
+      .addParams({ '_cb': timestamp.toString() }) // Cache busting parameter
       .find();
+      
     console.log('News channel entries found:', response.entries?.length || 0);
     console.log('News channel entries data:', response.entries);
     return response.entries || [];
@@ -501,11 +506,13 @@ export async function listAllTrendingEntries(): Promise<{ uid: string; title: st
 export async function fetchGlobalSettings(): Promise<GlobalSetting[]> {
   try {
     console.log('🔍 Fetching global_setting from CMS...');
+    const timestamp = Date.now();
     const response = await deliverySDK
       .contentType('global_setting')
       .entry()
       .includeReference(['file'])
       .includeEmbeddedItems()
+      .addParams({ '_cb': timestamp.toString() }) // Cache busting parameter
       .find();
     console.log('✅ Global settings found in CMS:', response.entries?.length || 0, 'entries');
     return (response.entries || []) as GlobalSetting[];
@@ -666,8 +673,8 @@ export async function fetchHindiNewsChannelEntries() {
   try {
     console.log('Fetching Hindi news channel entries...');
     
-    // First try to fetch with Hindi locale
-    let entries = await fetchContentForLocale('news_channel', 'hi-in', {
+    // Fetch content directly from CMS with Hindi locale
+    const entries = await fetchContentForLocale('news_channel', 'hi-in', {
       includeReference: ['reference'],
       includeEmbeddedItems: true,
       includeFallback: true
@@ -676,30 +683,6 @@ export async function fetchHindiNewsChannelEntries() {
     console.log('Hindi news channel entries found:', entries?.length || 0);
     console.log('Hindi news channel entries data:', entries);
     
-    // If no Hindi entries found, try with fallback to English
-    if (!entries || entries.length === 0) {
-      console.log('No Hindi entries found, trying English fallback...');
-      entries = await fetchContentForLocale('news_channel', 'en-us', {
-        includeReference: ['reference'],
-        includeEmbeddedItems: true,
-        includeFallback: true
-      });
-    }
-    
-    // Always apply Hindi translations to content (whether from Hindi or English fallback)
-    if (entries && entries.length > 0) {
-      entries = entries.map((entry: any) => ({
-        ...entry,
-        locale: 'hi-in', // Override locale to Hindi
-        title: entry.title ? translateToHindi(entry.title) : entry.title,
-        news: entry.news ? {
-          ...entry.news,
-          title: entry.news.title ? translateToHindi(entry.news.title) : entry.news.title,
-          description: entry.news.description ? translateToHindi(entry.news.description) : entry.news.description
-        } : entry.news
-      }));
-    }
-    
     return entries || [];
   } catch (error) {
     console.log('Error fetching Hindi news channel entries:', error);
@@ -707,97 +690,10 @@ export async function fetchHindiNewsChannelEntries() {
   }
 }
 
-// Helper function to translate English content to Hindi
-function translateToHindi(text: string): string {
-  if (!text) return text;
-  
-  const translations: Record<string, string> = {
-    // News Channel translations
-    'Heavy Rain Hits Delhi: Alerts Issued': 'दिल्ली में भारी बारिश: अलर्ट जारी',
-    'Heavy rainfall lashed Delhi today causing severe waterlogging and traffic jams. Get the latest weather updates and alerts.': 'आज दिल्ली में भारी बारिश हुई जिससे गंभीर जलभराव और ट्रैफिक जाम हो गया। ताज़ा मौसम अपडेट और अलर्ट प्राप्त करें।',
-    'Delhi Rains: City Hit by Torrential Downpour, Traffic Disrupted': 'दिल्ली बारिश: शहर में मूसलाधार बारिश, ट्रैफिक बाधित',
-    'Delhi Rains: City Hit by Torrential Downpour, Traffic Disrupted"': 'दिल्ली बारिश: शहर में मूसलाधार बारिश, ट्रैफिक बाधित',
-    'My Channel': 'मेरा चैनल',
-    'सबसे तेज़': 'सबसे तेज़',
-    
-    // Sidebar News translations
-    'Modi and Shah meet the President on the same day... Is there any connection with August 5?': 'मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?',
-    'During the Monsoon Session, Prime Minister Narendra Modi and Home Minister Amit Shah met President Droupadi Murmu on the same day.': 'मानसून सत्र के दौरान, प्रधानमंत्री नरेंद्र मोदी और गृह मंत्री अमित शाह ने एक ही दिन राष्ट्रपति द्रौपदी मुर्मू से मुलाकात की।',
-    '<strong>Modi and Shah meet the President on the same day... Is there any connection with August 5?</strong>\n<br/>During the Monsoon Session, Prime Minister Narendra Modi and Home Minister Amit Shah met President Droupadi Murmu on the same day.': '<strong>मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?</strong>\n<br/>मानसून सत्र के दौरान, प्रधानमंत्री नरेंद्र मोदी और गृह मंत्री अमित शाह ने एक ही दिन राष्ट्रपति द्रौपदी मुर्मू से मुलाकात की।',
-    
-    // Breaking Alerts translations
-    'Monsoon Flood Alert': 'मानसून बाढ़ अलर्ट',
-    '⚠️ Heavy rain warning issued for Mumbai and Pune. Stay indoors.': '⚠️ मुंबई और पुणे के लिए भारी बारिश की चेतावनी जारी। घर के अंदर रहें।',
-    '<p>⚠️ Heavy rain warning issued for Mumbai and Pune. Stay indoors.</p>': '<p>⚠️ मुंबई और पुणे के लिए भारी बारिश की चेतावनी जारी। घर के अंदर रहें।</p>',
-    
-    // Categories translations
-    'Sports Update': 'खेल अपडेट',
-    
-    // Common translations
-    'Breaking News': 'तोड़फोड़ समाचार',
-    'Latest Updates': 'नवीनतम अपडेट',
-    'News Categories': 'समाचार श्रेणियां',
-    'Live Updates': 'लाइव अपडेट',
-    'Our Team': 'हमारी टीम',
-    'Contact': 'संपर्क',
-    'Email': 'ईमेल',
-    'Phone': 'फोन',
-    'Address': 'पता',
-    'Verified': 'सत्यापित',
-    'LIVE': 'लाइव',
-    'Alert': 'अलर्ट',
-    'Active': 'सक्रिय',
-    'Read More': 'और पढ़ें',
-    'Trending': 'ट्रेंडिंग',
-    'Politics': 'राजनीति',
-    'Entertainment': 'मनोरंजन',
-    'Technology': 'तकनीक',
-    'Sports': 'खेल',
-    'News Channel': 'समाचार चैनल',
-    'All rights reserved': 'सर्वाधिकार सुरक्षित',
-    'My Channel Sabse Tej': 'मेरा चैनल सबसे तेज',
-    'Your Trusted News Source': 'आपका विश्वसनीय समाचार स्रोत',
-    'Latest news and updates': 'ताज़ा खबरें और अपडेट्स',
-    'Language': 'भाषा',
-    
-    // Sports translations
-    'Stay updated with the latest happenings in the world of sports, from cricket and football to tennis, kabaddi, and more. Get live scores, match highlights, expert analysis, and exclusive interviews with your favorite athletes. Whether it\'s IPL thrillers, Olympic milestones, or India\'s victories on the global stage — we\'ve got it all covered.': 'खेल की दुनिया में नवीनतम घटनाओं से अपडेट रहें, क्रिकेट और फुटबॉल से लेकर टेनिस, कबड्डी और अधिक। लाइव स्कोर, मैच हाइलाइट्स, विशेषज्ञ विश्लेषण और अपने पसंदीदा एथलीटों के विशेष साक्षात्कार प्राप्त करें। चाहे वह IPL के रोमांचक मैच हों, ओलंपिक के मील के पत्थर हों, या वैश्विक मंच पर भारत की जीत — हमारे पास सब कुछ है।',
-    
-    // Live Updates translations
-    '"Story | The Illness of Poetry | StoryBox with Jamshed"': '"कहानी | कविता की बीमारी | स्टोरीबॉक्स विद जमशेद"',
-    '"Massive price cut on iPhone 16 Pro, changes made ahead of iPhone 17 launch"': '"iPhone 16 Pro पर भारी कीमत में कटौती, iPhone 17 लॉन्च से पहले बदलाव"',
-    "'He was on a scooty, wearing a helmet…' — What the woman MP, victim of chain snatching near Parliament, revealed": "'वह स्कूटी पर था, हेलमेट पहने हुए…' — संसद के पास चेन स्नैचिंग की शिकार महिला सांसद ने क्या खुलासा किया",
-    // UI Elements translations
-    'LIVE UPDATES': 'लाइव अपडेट्स',
-    'Update #1': 'अपडेट #1',
-    'Update #2': 'अपडेट #2', 
-    'Update #3': 'अपडेट #3',
-    'Just now': 'अभी अभी',
-    'LATEST': 'नवीनतम',
-    // Author translations
-    'Aarav Desai': 'आरव देसाई',
-    'Aarav is a senior political correspondent with 8 years of experience in Indian national news and global affairs': 'आरव एक वरिष्ठ राजनीतिक संवाददाता हैं जिन्हें भारतीय राष्ट्रीय समाचार और वैश्विक मामलों में 8 वर्षों का अनुभव है',
-    
-    // Additional translations for dynamic content
-    'Update #': 'अपडेट #',
-    'updates': 'अपडेट्स',
-    
-
-    
-
-    
-
-    
-
-  };
-  
-  // Check for exact match first
-  if (translations[text]) {
-    return translations[text];
-  }
-  
-  // If no exact match, return original text
-  return text;
+// Helper function to get content based on locale (no hardcoded translations)
+export function getLocalizedContent(content: any, locale: string = 'en'): any {
+  // Simply return the content as-is - all translations should come from CMS
+  return content;
 }
 
 export async function fetchHindiSidebarNews(): Promise<SidebarNews[]> {
@@ -814,14 +710,7 @@ export async function fetchHindiSidebarNews(): Promise<SidebarNews[]> {
       });
     }
     
-    // Always apply Hindi translations to content
-    if (entries && entries.length > 0) {
-      entries = entries.map((entry: any) => ({
-        ...entry,
-        title: entry.title ? translateToHindi(entry.title) : entry.title,
-        descrption: entry.descrption ? translateToHindi(entry.descrption) : entry.descrption
-      }));
-    }
+    // Content comes directly from CMS with proper locale
     
     return entries || [];
   } catch (error) {
@@ -844,15 +733,7 @@ export async function fetchHindiBreakingAlerts(): Promise<BreakingAlert[]> {
       });
     }
     
-    // Always apply Hindi translations to content
-    if (entries && entries.length > 0) {
-      entries = entries.map((entry: any) => ({
-        ...entry,
-        title: entry.title ? translateToHindi(entry.title) : entry.title,
-        rich_text_editor: entry.rich_text_editor ? translateToHindi(entry.rich_text_editor) : entry.rich_text_editor
-      }));
-    }
-    
+    // Content comes directly from CMS with proper locale
     return entries || [];
   } catch (error) {
     console.log('Error fetching Hindi breaking alerts:', error);
@@ -876,15 +757,7 @@ export async function fetchHindiNewsCategories() {
       });
     }
     
-    // Always apply Hindi translations to content
-    if (entries && entries.length > 0) {
-      entries = entries.map((entry: any) => ({
-        ...entry,
-        title: entry.title ? translateToHindi(entry.title) : entry.title,
-        rich_text_editor: entry.rich_text_editor ? translateToHindi(entry.rich_text_editor) : entry.rich_text_editor
-      }));
-    }
-    
+    // Content comes directly from CMS with proper locale
     return entries || [];
   } catch (error) {
     console.error('Error fetching Hindi news categories:', error);
@@ -914,15 +787,7 @@ export async function fetchHindiLiveUpdates() {
       });
     }
     
-    // Always apply Hindi translations to content
-    if (entries && entries.length > 0) {
-      entries = entries.map((entry: any) => ({
-        ...entry,
-        title: entry.title ? translateToHindi(entry.title) : entry.title,
-        description: entry.description ? translateToHindi(entry.description) : entry.description,
-        content: entry.content ? translateToHindi(entry.content) : entry.content
-      }));
-    }
+    // Content comes directly from CMS with proper locale
     
     console.log('DEBUG - Live Updates Content:', entries);
     return entries || [];
@@ -981,14 +846,28 @@ export async function fetchHindiEmailSubscription(): Promise<EmailSubscription |
 export async function fetchMonsoonNewsByUID(uid: string) {
   try {
     console.log('Fetching monsoon news with UID:', uid);
-    const response = await deliverySDK
-      .contentType('news_channel')
-      .entry(uid)
-      .includeEmbeddedItems()
-      .includeFallback()
-      .fetch();
-    console.log('Monsoon news found:', response);
-    return response;
+    
+    // Try different content types that might contain monsoon news
+    const contentTypes = ['news_channel', 'monsoon_news', 'news', 'article', 'read_more_page'];
+    
+    for (const contentType of contentTypes) {
+      try {
+        console.log(`Trying content type: ${contentType} for UID: ${uid}`);
+        const response = await deliverySDK
+          .contentType(contentType)
+          .entry(uid)
+          .includeEmbeddedItems()
+          .includeFallback()
+          .fetch();
+        console.log(`✅ Found monsoon news in ${contentType}:`, response);
+        return response;
+      } catch (error) {
+        console.log(`❌ Entry not found in ${contentType}:`, error);
+      }
+    }
+    
+    console.log('❌ Monsoon news not found in any content type');
+    return null;
   } catch (error) {
     console.log('Monsoon news not found in CMS, using fallback data');
     console.log('Error details:', error);
@@ -1492,6 +1371,75 @@ export async function fetchTrendingFromAnySource(): Promise<Trending[]> {
   }
 }
 
+// Add cache busting parameter to force fresh content
+function addCacheBuster(url: string): string {
+  const timestamp = Date.now();
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}_cb=${timestamp}`;
+}
+
+// Force refresh function
+export async function forceRefreshContent() {
+  try {
+    console.log('🔄 Force refreshing content from Contentstack...');
+    
+    // Clear any cached data
+    if (typeof window !== 'undefined') {
+      // Clear browser cache for this domain
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }
+      
+      // Clear localStorage and sessionStorage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Force reload the page to get fresh content
+      window.location.reload();
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error force refreshing content:', error);
+    return false;
+  }
+}
+
+// Enhanced fetch function with cache busting
+export async function fetchWithCacheBusting(contentType: string, options: any = {}) {
+  try {
+    console.log(`🔍 Fetching ${contentType} with cache busting...`);
+    
+    // Add cache busting to the request
+    const timestamp = Date.now();
+    const enhancedOptions = {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    };
+    
+    const response = await deliverySDK
+      .contentType(contentType)
+      .entry()
+      .includeReference(['reference'])
+      .includeEmbeddedItems()
+      .includeFallback()
+      .find(enhancedOptions);
+      
+    console.log(`✅ ${contentType} fetched successfully with cache busting`);
+    return response.entries || [];
+  } catch (error) {
+    console.error(`❌ Error fetching ${contentType} with cache busting:`, error);
+    return [];
+  }
+}
 
 
 // Debug function to test Contentstack API directly
@@ -1527,4 +1475,42 @@ export async function debugContentstackEntry(uid: string) {
     console.log('❌ Debug error:', error);
     return null;
   }
+}
+
+// Helper function to translate specific content to Hindi (temporary until CMS is properly localized)
+export function translateToHindi(text: string, locale: string = 'en'): string {
+  if (!text || locale !== 'hi') return text;
+  
+  const translations: Record<string, string> = {
+    // Live Updates translations
+    '"Story | The Illness of Poetry | StoryBox with Jamshed"': '"कहानी | कविता की बीमारी | स्टोरीबॉक्स विद जमशेद"',
+    '"Massive price cut on iPhone 16 Pro, changes made ahead of iPhone 17 launch"': '"iPhone 16 Pro पर भारी कीमत में कटौती, iPhone 17 लॉन्च से पहले बदलाव"',
+    "'He was on a scooty, wearing a helmet…' — What the woman MP, victim of chain snatching near Parliament, revealed": "'वह स्कूटी पर था, हेलमेट पहने हुए…' — संसद के पास चेन स्नैचिंग की शिकार महिला सांसद ने क्या खुलासा किया",
+    
+    // Sidebar News translations
+    '"Modi and Shah meet the President on the same day... Is there any connection with August 5?"': '"मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?"',
+    'During the Monsoon Session, Prime Minister Narendra Modi and Home Minister Amit Shah met President Droupadi Murmu on the same day.': 'मानसून सत्र के दौरान, प्रधानमंत्री नरेंद्र मोदी और गृह मंत्री अमित शाह ने एक ही दिन राष्ट्रपति द्रौपदी मुर्मू से मुलाकात की।',
+    
+    // Author translations
+    'Aarav Desai': 'आरव देसाई',
+    'Aarav is a senior political correspondent with 8 years of experience in Indian national news and global affairs': 'आरव एक वरिष्ठ राजनीतिक संवाददाता हैं जिन्हें भारतीय राष्ट्रीय समाचार और वैश्विक मामलों में 8 वर्षों का अनुभव है',
+    
+    // UI translations
+    'LIVE UPDATES': 'लाइव अपडेट्स',
+    'updates': 'अपडेट्स',
+    'Update #': 'अपडेट #',
+    'LATEST': 'नवीनतम',
+    'Just now': 'अभी-अभी',
+    
+    // Breaking Alert translations
+    'Monsoon Flood Alert': 'मानसून बाढ़ अलर्ट',
+    '⚠️ Heavy rain warning issued for Mumbai and Pune. Stay indoors.': '⚠️ मुंबई और पुणे के लिए भारी बारिश की चेतावनी जारी। घर के अंदर रहें।',
+    'और पढ़ें →': 'और पढ़ें →',
+    'सत्यापित': 'सत्यापित'
+  };
+  
+  if (translations[text]) {
+    return translations[text];
+  }
+  return text;
 }

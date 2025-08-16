@@ -38,9 +38,12 @@ interface NewsChannelEntry {
 
 // Component to display all schema fields with real data
 export default async function SchemaFieldsDisplay() {
+  // Get entry UID from environment variable or use a default
+  const entryUid = process.env.NEXT_PUBLIC_DEFAULT_ENTRY_UID || 'blt0171967259c79e5c';
+  
   // Fetch real data from Contentstack
   const [mainEntry, allEntries] = await Promise.all([
-    fetchNewsChannelWithModularBlocks(process.env.ENTRYUID || 'blt0171967259c79e5c'),
+    fetchNewsChannelWithModularBlocks(entryUid),
     fetchAllNewsChannelEntries()
   ]);
 
@@ -104,10 +107,10 @@ export default async function SchemaFieldsDisplay() {
           <h3 className="font-bold text-xl text-gray-800 mb-2">📅 Date</h3>
           <p className="text-sm text-gray-500 mb-3 font-medium">ISO Date Format</p>
           <p className="text-purple-600 font-bold text-lg">
-                            {entry.date ? new Date(entry.date).toLocaleDateString('en-US', {
-                  year: 'numeric',
+                            {entry.date ? new Date(entry.date).toLocaleDateString('en-GB', {
+                  day: '2-digit',
                   month: '2-digit',
-                  day: '2-digit'
+                  year: 'numeric'
                 }) : 'Not set'}
           </p>
         </div>

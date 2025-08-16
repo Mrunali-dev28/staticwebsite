@@ -4,9 +4,10 @@ import PersonalizedNews from './PersonalizedNews';
 
 interface PersonalizedNewsWrapperProps {
   locale?: 'en' | 'hi';
+  newsChannelEntries?: any[];
 }
 
-export default function PersonalizedNewsWrapper({ locale = 'en' }: PersonalizedNewsWrapperProps) {
+export default function PersonalizedNewsWrapper({ locale = 'en', newsChannelEntries = [] }: PersonalizedNewsWrapperProps) {
   console.log('🔍 PersonalizedNewsWrapper: Rendering with locale:', locale);
   return (
     <React.Suspense fallback={
@@ -19,7 +20,7 @@ export default function PersonalizedNewsWrapper({ locale = 'en' }: PersonalizedN
         </div>
       </div>
     }>
-      <PersonalizedNews locale={locale} />
+      <PersonalizedNews locale={locale} newsChannelEntries={newsChannelEntries} />
     </React.Suspense>
   );
 } 

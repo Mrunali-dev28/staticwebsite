@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { EmailSubscription as EmailSubscriptionType } from '@/lib/contentstack';
+import { lyticsHelpers } from '../../components/LyticsTracker';
 
 interface EmailSubscriptionProps {
   emailSubscriptionData: EmailSubscriptionType | null;
@@ -31,6 +32,9 @@ export default function EmailSubscription({ emailSubscriptionData, locale = 'en'
       console.log('📧 Starting email subscription for:', email);
       console.log('📧 Calling Contentstack API directly...');
       
+      // Track email subscription attempt
+      lyticsHelpers.trackEmailSubscription(email, 'newsletter_form');
+      
       // Call Contentstack automation API
       const contentstackResponse = await fetch('https://app.contentstack.com/automations-api/run/85bcaf66ce3244c88fa225fbc8ce2738', {
         method: 'POST',
@@ -56,12 +60,30 @@ export default function EmailSubscription({ emailSubscriptionData, locale = 'en'
       const responseText = await contentstackResponse.text();
       console.log('📧 Contentstack API response body:', responseText);
 
+      // Track successful subscription
+      lyticsHelpers.trackEvent('email_subscription_success', {
+        email,
+        source: 'newsletter_form',
+        locale,
+        page: window.location.pathname
+      });
+
       // Success - email sent via Contentstack Automation Hub
       setMessage(locale === 'hi' ? '✅ सदस्यता सफल! अपना ईमेल जांचें।' : '✅ Subscription successful! Check your email.');
       setEmail('');
       
     } catch (error) {
       console.error('❌ Subscription error:', error);
+      
+      // Track failed subscription
+      lyticsHelpers.trackEvent('email_subscription_error', {
+        email,
+        source: 'newsletter_form',
+        error: error instanceof Error ? error.message : String(error),
+        locale,
+        page: window.location.pathname
+      });
+      
       setMessage(locale === 'hi' ? '❌ त्रुटि: ' + error : '❌ Error: ' + error);
     } finally {
       setIsSubmitting(false);

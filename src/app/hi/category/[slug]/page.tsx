@@ -178,10 +178,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                       {category.title} में नवीनतम विकास के साथ अपडेट रहें।
                     </p>
                     <div className="text-sm text-gray-500">
-                      अपडेट: {new Date().toLocaleDateString('hi-IN', {
-                  year: 'numeric',
+                      अपडेट: {new Date().toLocaleDateString('en-GB', {
+                  day: '2-digit',
                   month: '2-digit',
-                  day: '2-digit'
+                  year: 'numeric'
                 })}
                     </div>
                   </div>

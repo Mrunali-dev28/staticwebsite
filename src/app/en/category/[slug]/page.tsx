@@ -178,10 +178,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                       Stay updated with the most recent developments in {category.title.toLowerCase()}.
                     </p>
                     <div className="text-sm text-gray-500">
-                      Updated: {new Date().toLocaleDateString('en-US', {
-                  year: 'numeric',
+                      Updated: {new Date().toLocaleDateString('en-GB', {
+                  day: '2-digit',
                   month: '2-digit',
-                  day: '2-digit'
+                  year: 'numeric'
                 })}
                     </div>
                   </div>

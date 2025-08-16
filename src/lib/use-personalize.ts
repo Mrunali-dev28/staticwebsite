@@ -222,7 +222,27 @@ export const usePersonalize = () => {
         const location = await getLocationFromIP();
         const detectedCity = location?.city || 'Pune'; // Fallback to Pune if detection fails
         console.log('🔍 usePersonalize: Detected city:', detectedCity);
-        await setUserCity(detectedCity);
+        console.log('🔍 usePersonalize: Full location data:', location);
+        
+        // TEMPORARY: Force US detection for testing when VPN is on
+        // Check if we're accessing from a US IP or if there's a URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const forceUS = urlParams.get('forceUS');
+        
+        if (forceUS === 'true' || (location?.country === 'US' && location?.city)) {
+          console.log('🇺🇸 FORCING US REGION DETECTION FOR TESTING');
+          console.log('🇺🇸 Detected US location:', location);
+          await setUserCity('New York'); // Force US city
+          // Also set the region to 'us' in the state
+          setState(prev => ({
+            ...prev,
+            region: 'us',
+            city: 'New York',
+            isLoading: false,
+          }));
+        } else {
+          await setUserCity(detectedCity);
+        }
         console.log('🔍 usePersonalize: City set successfully');
       } catch {
         console.error('❌ usePersonalize: Error detecting city');
@@ -244,18 +264,24 @@ export const usePersonalize = () => {
   // Dynamic IP-based location detection
   const getLocationFromIP = async () => {
     try {
+      console.log('🔍 getLocationFromIP: Fetching location from ipapi.co...');
       const response = await fetch('https://ipapi.co/json/');
       if (response.ok) {
         const data = await response.json();
-        return {
+        console.log('🔍 getLocationFromIP: Raw response from ipapi.co:', data);
+        const locationData = {
           city: data.city,
           region: data.region,
           country: data.country,
           ip: data.ip
         };
+        console.log('🔍 getLocationFromIP: Processed location data:', locationData);
+        return locationData;
+      } else {
+        console.log('⚠️ getLocationFromIP: Response not ok, status:', response.status);
       }
     } catch (error) {
-      console.log('⚠️ IP location detection failed, using fallback');
+      console.log('⚠️ IP location detection failed, using fallback:', error);
     }
     return null;
   };
