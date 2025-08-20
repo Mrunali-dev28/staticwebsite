@@ -49,24 +49,22 @@ export default function LiveUpdates({ liveUpdates, authors = [], locale = 'en' }
               <div className={`update-header ${
                 index === 0 ? 'bg-red-100' : 'bg-gray-50'
               }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      index === 0 ? 'bg-red-500 animate-pulse' : 'bg-gray-400'
-                    }`}></div>
-                    <span className="text-sm font-medium text-gray-600">
-                      {translateToHindi('Update #', locale)}{index + 1}
+                <div className="flex items-center space-x-3 min-w-0">
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                    index === 0 ? 'bg-red-500 animate-pulse' : 'bg-gray-400'
+                  }`}></div>
+                  <span className="text-sm font-medium text-gray-600 flex-shrink-0">
+                    {translateToHindi('Update #', locale)}{index + 1}
+                  </span>
+                  {index === 0 && (
+                    <span className="badge badge-red flex-shrink-0">
+                      {translateToHindi('LATEST', locale)}
                     </span>
-                    {index === 0 && (
-                      <span className="badge badge-red">
-                        {translateToHindi('LATEST', locale)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <span>🕒</span>
-                    <span>{translateToHindi('Just now', locale)}</span>
-                  </div>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 flex-shrink-0">
+                  <span>🕒</span>
+                  <span>{translateToHindi('Just now', locale)}</span>
                 </div>
               </div>
 

@@ -54,7 +54,7 @@ export default function BreakingAlertComponent({ breakingAlerts, currentLanguage
   return (
     <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-4 mb-6 rounded-lg shadow-lg">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <div className="flex items-center space-x-3">
             <span className="text-2xl animate-pulse">🚨</span>
             <div>
@@ -63,12 +63,6 @@ export default function BreakingAlertComponent({ breakingAlerts, currentLanguage
                 {breakingAlerts.length} {locale === 'hi' ? 'अलर्ट' : 'alert'}{breakingAlerts.length !== 1 ? (locale === 'hi' ? 'सक्रिय' : 's') : ''} {locale === 'hi' ? 'सक्रिय' : 'active'}
               </div>
             </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <span className="bg-red-500 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-              LIVE
-            </span>
           </div>
         </div>
 

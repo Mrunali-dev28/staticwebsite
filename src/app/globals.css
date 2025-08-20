@@ -248,6 +248,8 @@ body {
   justify-content: space-between;
   align-items: center;
   font-size: 0.875rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .update-content {
@@ -260,6 +262,8 @@ body {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+
 
 /* Image Styles - Horizontal Images (16:9 aspect ratio) */
 .news-image {
@@ -342,6 +346,48 @@ body {
 }
 
 .sidebar-image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Badge styles */
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-red {
+  background-color: #dc2626;
+  color: white;
+}
+
+.badge-blue {
+  background-color: #2563eb;
+  color: white;
+}
+
+/* New Update Image Styles */
+.new-update-image-container {
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* Creates 16:9 horizontal aspect ratio */
+  background: #f3f4f6;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.new-update-image {
   position: absolute;
   top: 0;
   left: 0;

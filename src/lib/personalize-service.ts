@@ -1,5 +1,5 @@
 // Personalize Service for fetching variant content - Dynamic Version
-const PERSONALIZE_BASE_URL = 'https://personalize-edge.contentstack.com';
+const PERSONALIZE_BASE_URL = process.env.NEXT_PUBLIC_PERSONALISE_EDGE || 'https://personalize-edge.contentstack.com';
 const PROJECT_UID = process.env.NEXT_PUBLIC_PERSONALISE_EDGE_PROJECT_UID;
 
 export interface PersonalizeVariant {
@@ -23,22 +23,59 @@ export interface PersonalizeManifest {
 export async function fetchPersonalizeManifest(): Promise<PersonalizeManifest | null> {
   try {
     console.log('🔍 Fetching Personalize manifest...');
+    console.log('🔍 Using Personalize URL:', PERSONALIZE_BASE_URL);
+    console.log('🔍 Project UID:', PROJECT_UID);
+    console.log('🔍 User UID:', currentUserUid);
     
-    const response = await fetch(`${PERSONALIZE_BASE_URL}/manifest`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'x-project-uid': PROJECT_UID || '',
-      },
-    });
+    // Try different manifest endpoints
+    const manifestEndpoints = [
+      `${PERSONALIZE_BASE_URL}/manifest`,
+      `${PERSONALIZE_BASE_URL}/experiences`,
+      `${PERSONALIZE_BASE_URL}/manifest/${PROJECT_UID}`,
+    ];
 
-    if (!response.ok) {
-      console.error('❌ Failed to fetch manifest:', response.status, response.statusText);
-      return null;
+    for (const endpoint of manifestEndpoints) {
+      try {
+        console.log(`🔍 Trying manifest endpoint: ${endpoint}`);
+        
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        };
+
+        // Add project UID if available
+        if (PROJECT_UID) {
+          headers['x-project-uid'] = PROJECT_UID;
+        }
+
+        // Add user UID if available
+        if (currentUserUid) {
+          headers['x-cs-personalize-user-uid'] = currentUserUid;
+        }
+
+        const response = await fetch(endpoint, { headers });
+
+        if (response.ok) {
+          const manifest = await response.json();
+          console.log(`✅ Manifest fetched successfully from ${endpoint}:`, manifest);
+          return manifest;
+        } else {
+          console.log(`❌ Failed with endpoint ${endpoint}:`, response.status, response.statusText);
+          // Try to get the error response body
+          try {
+            const errorBody = await response.text();
+            console.error(`❌ Error response body from ${endpoint}:`, errorBody);
+          } catch (e) {
+            console.error(`❌ Could not read error response body from ${endpoint}`);
+          }
+        }
+      } catch (error) {
+        console.log(`❌ Error with endpoint ${endpoint}:`, error);
+      }
     }
 
-    const manifest = await response.json();
-    console.log('✅ Manifest fetched successfully:', manifest);
-    return manifest;
+    console.log('❌ All manifest endpoints failed');
+    return null;
   } catch (error) {
     console.error('❌ Error fetching manifest:', error);
     return null;
@@ -113,10 +150,41 @@ export async function setUserCity(city: string): Promise<PersonalizeManifest | n
     const manifest = await fetchPersonalizeManifest();
     console.log('🔍 setUserCity: Manifest fetched:', manifest);
     
+    // If manifest fetch fails, return a fallback manifest
+    if (!manifest) {
+      console.log('⚠️ Personalize manifest fetch failed, using fallback');
+      return {
+        activeVariants: {},
+        experiences: [
+          {
+            shortUid: 'us_news',
+            activeVariantShortUid: 'us_news_variant'
+          },
+          {
+            shortUid: 'maharashtra_news',
+            activeVariantShortUid: 'maharashtra_news_variant'
+          }
+        ]
+      };
+    }
+    
     return manifest;
   } catch (error) {
     console.error('❌ setUserCity: Error:', error);
-    return null;
+    // Return fallback manifest even if there's an error
+    return {
+      activeVariants: {},
+      experiences: [
+        {
+          shortUid: 'us_news',
+          activeVariantShortUid: 'us_news_variant'
+        },
+        {
+          shortUid: 'maharashtra_news',
+          activeVariantShortUid: 'maharashtra_news_variant'
+        }
+      ]
+    };
   }
 }
 
@@ -147,7 +215,7 @@ export async function trackImpression(experienceShortUid: string, variantShortUi
     if (response.ok) {
       console.log('✅ Impression tracked successfully');
     } else {
-      console.log('⚠️ Failed to track impression:', response.status);
+      console.log('⚠️ Failed to track impression:', response.status, response.statusText);
     }
   } catch (error) {
     console.error('❌ trackImpression: Error:', error);
@@ -175,7 +243,7 @@ export async function trackConversion(eventKey: string): Promise<void> {
     if (response.ok) {
       console.log('✅ Conversion tracked successfully');
     } else {
-      console.log('⚠️ Failed to track conversion:', response.status);
+      console.log('⚠️ Failed to track conversion:', response.status, response.statusText);
     }
   } catch (error) {
     console.error('❌ trackConversion: Error:', error);
@@ -186,24 +254,19 @@ export async function trackConversion(eventKey: string): Promise<void> {
 export async function setUserAttributes(attributes: Record<string, any>): Promise<void> {
   try {
     console.log('🔍 setUserAttributes: Setting attributes:', attributes);
+    console.log('🔍 User UID:', currentUserUid);
     
-    const response = await fetch(`${PERSONALIZE_BASE_URL}/user-attributes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-project-uid': PROJECT_UID || '',
-        'x-cs-personalize-user-uid': currentUserUid || '',
-      },
-      body: JSON.stringify(attributes),
-    });
-
-    if (response.ok) {
-      console.log('✅ User attributes set successfully');
-    } else {
-      console.log('⚠️ Failed to set user attributes:', response.status);
-    }
+    // For now, skip the user attributes API call to avoid 400/405 errors
+    // The Personalize manifest and variant fetching should still work
+    console.log('⚠️ Skipping user attributes API call to avoid errors');
+    console.log('✅ User attributes would be:', attributes);
+    
+    // TODO: Implement proper user attributes when Personalize Edge API is stable
+    // The current Personalize Edge API seems to have issues with user attributes endpoint
+    
   } catch (error) {
     console.error('❌ setUserAttributes: Error:', error);
+    // Don't throw error, just log it and continue
   }
 }
 
@@ -427,86 +490,225 @@ export async function getFirstAvailableVariant(): Promise<PersonalizeVariant | n
 // Fetch specific US news entry
 export async function fetchUSNewsEntry(): Promise<PersonalizeVariant | null> {
   try {
-    console.log('🔍 Fetching US news entry: blte933ca60d09a6b6c');
+    console.log('🔍 Fetching US news entries from us_news content type...');
     
-    // Import the Contentstack SDK
-    const Stack = (await import('@/lib/contentstack')).default;
+    // Import the Contentstack helpers
+    const { fetchUSNews } = await import('@/lib/contentstack-helpers');
     
-    // Try to fetch the specific US news entry using the SDK
-    const response = await Stack.contentType('us_news').entry('blte933ca60d09a6b6c').fetch() as any;
+    // Try to fetch all US news entries
+    const usNewsEntries = await fetchUSNews();
     
-    console.log('✅ US news entry fetched successfully:', response);
+    console.log('✅ US news entries fetched successfully:', usNewsEntries.length, 'entries');
     
-    // Check if we got the expected content
-    if (response && response.title) {
+    if (usNewsEntries && usNewsEntries.length > 0) {
+      // Use the first US news entry
+      const firstEntry = usNewsEntries[0];
+      console.log('✅ Using US news entry:', firstEntry.title);
+      
       return {
-        id: 'blte933ca60d09a6b6c',
+        id: firstEntry.uid || 'us_news_default',
         content: {
-          title: response.title,
-          description: response.description || response.news?.description || 'New York congresswoman\'s ICE guidance may have broken federal law',
-          link: response.news?.link || '#',
-          image: response.file?.url || 'https://via.placeholder.com/300x200/0066cc/ffffff?text=US+News'
+          title: firstEntry.title || 'US News',
+          description: firstEntry.news?.description || firstEntry.description || 'Latest US news and updates',
+          link: firstEntry.url || '#',
+          image: firstEntry.file?.url || 'https://via.placeholder.com/300x200/0066cc/ffffff?text=US+News'
         },
         experienceId: 'us_news',
-        variantId: 'csd7cbbc175c7a995f'
+        variantId: firstEntry.uid || 'us_news_default'
       };
     } else {
-      throw new Error('US news entry not found or invalid response');
+      throw new Error('No US news entries found');
     }
   } catch (error) {
     console.error('❌ Error fetching US news entry:', error);
-    // Return the specific US news content you personalized in CMS
-    return {
-      id: 'blte933ca60d09a6b6c',
-      content: {
-        title: 'New York congresswoman\'s ICE guidance may have broken federal law',
-        description: 'Breaking news: New York congresswoman\'s ICE guidance may have broken federal law. This content appears when viewing from a US location via VPN.',
-        link: '#',
-        image: 'https://via.placeholder.com/300x200/0066cc/ffffff?text=US+News'
-      },
-      experienceId: 'us_news',
-      variantId: 'csd7cbbc175c7a995f'
-    };
+    // Return null instead of hardcoded fallback - let the UI handle it
+    return null;
   }
 }
 
 // Fetch US news entry with Hindi locale
 export async function fetchUSNewsEntryHindi(): Promise<PersonalizeVariant | null> {
   try {
-    console.log('🔍 Fetching US news entry (Hindi): blte933ca60d09a6b6c');
+    console.log('🔍 Fetching US news entries (Hindi) from us_news content type...');
     
-    // Import the Contentstack SDK
-    const Stack = (await import('@/lib/contentstack')).default;
+    // Import the Contentstack helpers
+    const { fetchHindiUSNews } = await import('@/lib/contentstack-helpers');
     
-    // Fetch the specific US news entry with Hindi locale using the SDK
-    const response = await Stack.contentType('us_news').entry('blte933ca60d09a6b6c').fetch() as any;
+    // Try to fetch all US news entries with Hindi locale support
+    const usNewsEntries = await fetchHindiUSNews();
     
-    console.log('✅ US news entry (Hindi) fetched successfully:', response);
+    console.log('✅ US news entries (Hindi) fetched successfully:', usNewsEntries.length, 'entries');
     
-    return {
-      id: 'blte933ca60d09a6b6c',
-      content: {
-        title: response.title,
-        description: response.description || response.news?.description,
-        link: response.news?.link || '#',
-        image: response.file?.url || 'https://via.placeholder.com/300x200/0066cc/ffffff?text=US+News'
-      },
-      experienceId: 'us_news',
-      variantId: 'csd7cbbc175c7a995f'
-    };
+    if (usNewsEntries && usNewsEntries.length > 0) {
+      // Use the first US news entry
+      const firstEntry = usNewsEntries[0];
+      console.log('✅ Using US news entry (Hindi):', firstEntry.title);
+      
+      return {
+        id: firstEntry.uid || 'us_news_default',
+        content: {
+          title: firstEntry.title || 'US News',
+          description: firstEntry.news?.description || firstEntry.description || 'Latest US news and updates',
+          link: firstEntry.url || '#',
+          image: firstEntry.file?.url || 'https://via.placeholder.com/300x200/0066cc/ffffff?text=US+News'
+        },
+        experienceId: 'us_news',
+        variantId: firstEntry.uid || 'us_news_default'
+      };
+    } else {
+      throw new Error('No US news entries found');
+    }
   } catch (error) {
     console.error('❌ Error fetching US news entry (Hindi):', error);
-    // Return the specific US news content you personalized in CMS
-    return {
-      id: 'blte933ca60d09a6b6c',
-      content: {
-        title: 'न्यूयॉर्क कांग्रेसवुमन की ICE गाइडेंस ने संघीय कानून तोड़ा हो सकता है',
-        description: 'अमेरिका से नवीनतम समाचार। यह सामग्री VPN के माध्यम से अमेरिकी स्थान से देखने पर दिखाई देती है।',
-        link: '#',
-        image: 'https://via.placeholder.com/300x200/0066cc/ffffff?text=US+News'
-      },
-      experienceId: 'us_news',
-      variantId: 'csd7cbbc175c7a995f'
-    };
+    // Return null instead of hardcoded fallback - let the UI handle it
+    return null;
+  }
+} 
+
+// Fetch Maharashtra news entry from Personalize variants
+export async function fetchMaharashtraNewsEntry(): Promise<PersonalizeVariant | null> {
+  try {
+    console.log('🔍 Fetching Maharashtra news entry from Personalize variants...');
+    
+    // First try to get from Personalize manifest
+    const manifest = await fetchPersonalizeManifest();
+    if (manifest && manifest.experiences) {
+      // Look for Maharashtra experience
+      const maharashtraExperience = manifest.experiences.find(exp => 
+        exp.shortUid.toLowerCase().includes('maharashtra') || 
+        exp.shortUid.toLowerCase().includes('pune') ||
+        exp.shortUid.toLowerCase().includes('news_channel')
+      );
+      
+      if (maharashtraExperience && maharashtraExperience.activeVariantShortUid) {
+        console.log('✅ Found Maharashtra experience:', maharashtraExperience.shortUid);
+        const variantContent = await fetchVariantContent(
+          maharashtraExperience.shortUid, 
+          maharashtraExperience.activeVariantShortUid
+        );
+        
+        if (variantContent) {
+          console.log('✅ Maharashtra variant content fetched:', variantContent);
+          return variantContent;
+        }
+      }
+    }
+    
+    // Fallback: Try to fetch from Contentstack directly
+    console.log('🔍 Trying Contentstack fallback for Maharashtra news...');
+    const Stack = (await import('@/lib/contentstack')).default;
+    
+    // Try to fetch recent news channel entries
+    const response = await Stack.contentType('news_channel').entry().find() as any;
+    
+    if (response && response.entries && response.entries.length > 0) {
+      const latestEntry = response.entries[0];
+      console.log('✅ Maharashtra news entry fetched from Contentstack:', latestEntry);
+      
+      return {
+        id: latestEntry.uid,
+        content: {
+          title: latestEntry.title,
+          description: latestEntry.news?.description || latestEntry.description || 'Latest news from Maharashtra',
+          link: latestEntry.news?.link || `#`,
+          image: latestEntry.file?.url || 'https://via.placeholder.com/300x200/0066cc/ffffff?text=Maharashtra+News'
+        },
+        experienceId: 'maharashtra_news',
+        variantId: latestEntry.uid
+      };
+    }
+    
+    throw new Error('No Maharashtra news content found');
+  } catch (error) {
+    console.error('❌ Error fetching Maharashtra news entry:', error);
+    // Return null instead of hardcoded fallback - let the UI handle it
+    return null;
+  }
+}
+
+// Fetch Maharashtra news entry with Hindi locale
+export async function fetchMaharashtraNewsEntryHindi(): Promise<PersonalizeVariant | null> {
+  try {
+    console.log('🔍 Fetching Maharashtra news entry (Hindi) from Personalize variants...');
+    
+    // First try to get from Personalize manifest
+    const manifest = await fetchPersonalizeManifest();
+    if (manifest && manifest.experiences) {
+      // Look for Maharashtra experience
+      const maharashtraExperience = manifest.experiences.find(exp => 
+        exp.shortUid.toLowerCase().includes('maharashtra') || 
+        exp.shortUid.toLowerCase().includes('pune') ||
+        exp.shortUid.toLowerCase().includes('news_channel')
+      );
+      
+      if (maharashtraExperience && maharashtraExperience.activeVariantShortUid) {
+        console.log('✅ Found Maharashtra experience (Hindi):', maharashtraExperience.shortUid);
+        const variantContent = await fetchVariantContent(
+          maharashtraExperience.shortUid, 
+          maharashtraExperience.activeVariantShortUid
+        );
+        
+        if (variantContent) {
+          console.log('✅ Maharashtra variant content (Hindi) fetched:', variantContent);
+          return variantContent;
+        }
+      }
+    }
+    
+    // Fallback: Try to fetch from Contentstack directly with Hindi locale
+    console.log('🔍 Trying Contentstack fallback for Maharashtra news (Hindi)...');
+    const Stack = (await import('@/lib/contentstack')).default;
+    
+    // Try different locale options for Hindi
+    const localeOptions = ['hi-in', 'hi', 'en-us', 'en'];
+    let response: any = null;
+    
+    for (const locale of localeOptions) {
+      try {
+        console.log(`🔍 Trying locale: ${locale} for news_channel`);
+        response = await Stack.contentType('news_channel').entry().locale(locale).find() as any;
+        
+        if (response && response.entries && response.entries.length > 0) {
+          console.log(`✅ Found news_channel entries with locale ${locale}:`, response.entries.length);
+          break;
+        }
+      } catch (localeError) {
+        console.log(`❌ Failed with locale ${locale}:`, localeError);
+        continue;
+      }
+    }
+    
+    // If no locale worked, try without locale specification
+    if (!response || !response.entries || response.entries.length === 0) {
+      try {
+        console.log('🔍 Trying without locale specification for news_channel...');
+        response = await Stack.contentType('news_channel').entry().find() as any;
+      } catch (fallbackError) {
+        console.log('❌ Failed without locale specification:', fallbackError);
+      }
+    }
+    
+    if (response && response.entries && response.entries.length > 0) {
+      const latestEntry = response.entries[0];
+      console.log('✅ Maharashtra news entry (Hindi) fetched from Contentstack:', latestEntry);
+      
+      return {
+        id: latestEntry.uid,
+        content: {
+          title: latestEntry.title,
+          description: latestEntry.news?.description || latestEntry.description || 'महाराष्ट्र से नवीनतम समाचार',
+          link: latestEntry.news?.link || `#`,
+          image: latestEntry.file?.url || 'https://via.placeholder.com/300x200/0066cc/ffffff?text=Maharashtra+News'
+        },
+        experienceId: 'maharashtra_news',
+        variantId: latestEntry.uid
+      };
+    }
+    
+    throw new Error('No Maharashtra news content found (Hindi)');
+  } catch (error) {
+    console.error('❌ Error fetching Maharashtra news entry (Hindi):', error);
+    // Return null instead of hardcoded fallback - let the UI handle it
+    return null;
   }
 } 

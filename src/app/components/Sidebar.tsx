@@ -63,10 +63,10 @@ export default function Sidebar({ sidebarNews, locale = 'en' }: SidebarProps) {
         window.location.href = news.url;
       }
     } else {
-      // Default behavior - navigate to read-more page
-      const readMoreUrl = `/${locale}/read-more/${news.uid}`;
-      console.log('Navigating to read-more page:', readMoreUrl);
-      window.location.href = readMoreUrl;
+      // Default behavior - navigate to sidebar news detail page
+      const sidebarNewsUrl = `/${locale}/sidebar-news/${news.uid}`;
+      console.log('Navigating to sidebar news page:', sidebarNewsUrl);
+      window.location.href = sidebarNewsUrl;
     }
   };
   
@@ -79,57 +79,58 @@ export default function Sidebar({ sidebarNews, locale = 'en' }: SidebarProps) {
       </div>
       
       <div className="divide-y divide-gray-100">
-        {sidebarNews.length > 0 ? (
-          sidebarNews.map((news) => (
-            <article 
-              key={news.uid} 
-              className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-              onClick={() => handleSidebarNewsClick(news)}
-            >
-              <div className="space-y-3">
-                {/* Always show image container - with fallback if no image */}
-                <div className="sidebar-image-container">
-                  {news.file && news.file.url ? (
+        {(() => {
+          // Find the first entry that has an image
+          const newsWithImage = sidebarNews.find(news => news.file && news.file.url);
+          
+          if (newsWithImage) {
+            return (
+              <article 
+                key={newsWithImage.uid} 
+                className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => handleSidebarNewsClick(newsWithImage)}
+              >
+                <div className="space-y-3">
+                  {/* Show image container */}
+                  <div className="sidebar-image-container">
                     <img 
-                      src={news.file.url} 
-                      alt={news.file.filename || news.title}
+                      src={newsWithImage.file!.url} 
+                      alt={newsWithImage.file!.filename || newsWithImage.title}
                       className="sidebar-image"
                     />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-                      📰
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="heading-secondary line-clamp-2">
+                      {translateToHindi(newsWithImage.title, locale)}
+                    </h4>
+                    {newsWithImage.descrption && (
+                      <div className="text-body text-sm line-clamp-3" 
+                           dangerouslySetInnerHTML={{ __html: translateToHindi(newsWithImage.descrption, locale) }}>
+                      </div>
+                    )}
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="badge badge-red">
+                        {locale === 'hi' ? 'तोड़फोड़' : 'Breaking'}
+                      </span>
+                      <span className="text-blue-600 text-sm font-medium">
+                        {locale === 'hi' ? 'पढ़ें →' : 'Read →'}
+                      </span>
                     </div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <h4 className="heading-secondary line-clamp-2">
-                    {translateToHindi(news.title, locale)}
-                  </h4>
-                  {news.descrption && (
-                    <div className="text-body text-sm line-clamp-3" 
-                         dangerouslySetInnerHTML={{ __html: translateToHindi(news.descrption, locale) }}>
-                    </div>
-                  )}
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="badge badge-red">
-                      {locale === 'hi' ? 'तोड़फोड़' : 'Breaking'}
-                    </span>
-                    <span className="text-blue-600 text-sm font-medium">
-                      {locale === 'hi' ? 'पढ़ें →' : 'Read →'}
-                    </span>
                   </div>
                 </div>
+              </article>
+            );
+          } else {
+            return (
+              <div className="text-center py-8">
+                <div className="text-gray-400 text-4xl mb-4">📰</div>
+                <p className="text-muted text-sm">
+                  {locale === 'hi' ? 'इस समय कोई साइडबार समाचार उपलब्ध नहीं है' : 'No sidebar news available at the moment'}
+                </p>
               </div>
-            </article>
-          ))
-        ) : (
-          <div className="text-center py-8">
-            <div className="text-gray-400 text-4xl mb-4">📰</div>
-            <p className="text-muted text-sm">
-              {locale === 'hi' ? 'इस समय कोई साइडबार समाचार उपलब्ध नहीं है' : 'No sidebar news available at the moment'}
-            </p>
-          </div>
-        )}
+            );
+          }
+        })()}
       </div>
     </aside>
   );

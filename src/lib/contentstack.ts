@@ -111,6 +111,14 @@ export interface BreakingAlert {
 export interface LiveUpdate {
   uid: string;
   title: string;
+  created_at?: string;
+  updated_at?: string;
+  publish_details?: {
+    time: string;
+    user: string;
+    environment: string;
+    locale: string;
+  };
 }
 
 export interface Contact {
@@ -206,6 +214,15 @@ export interface GoToPolitics {
   updates?: string;
   latest_news?: string;
   url?: string;
+}
+
+export interface NewUpdate {
+  uid: string;
+  title: string;
+  file?: {
+    url: string;
+    filename: string;
+  };
 }
 
 // Export the Stack for use in other files

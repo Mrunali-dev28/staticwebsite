@@ -12,18 +12,22 @@ import {
   fetchHindiEmailSubscription,
   fetchHindiGlobalSettings,
   fetchContactByUID,
-  translateToHindi
+  translateToHindi,
+  fetchHindiNewUpdates
 } from '@/lib/contentstack-helpers';
-import { SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton, EmailSubscription, GlobalSetting, Contact } from '@/lib/contentstack';
+import { SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton, EmailSubscription, GlobalSetting, Contact, NewUpdate } from '@/lib/contentstack';
 
 import Header from '../components/Header';
 import NewsChannel from '../components/NewsChannel';
 import Sidebar from '../components/Sidebar';
+import NewUpdateWidget from '@/app/components/NewUpdate';
 import NewsCategories from '../components/NewsCategories';
 import LiveUpdates from '../components/LiveUpdates';
 import BreakingAlertComponent from '../components/BreakingAlert';
 import PersonalizedNewsWrapper from '../components/PersonalizedNewsWrapper';
 import EmailSubscriptionComponent from '../components/EmailSubscription';
+import PathforaTriggers from '../../components/PathforaTriggers';
+
 
 // Add ISR configuration for automatic revalidation
 export const revalidate = 10; // Revalidate every 10 seconds for faster updates
@@ -50,7 +54,8 @@ export default async function HindiHomePage() {
       trendingData,
       languageSwitchButton,
       emailSubscription,
-      contactData
+      contactData,
+      newUpdates
     ] = await Promise.all([
       fetchHindiGlobalSettings(),
       fetchHindiSidebarNews(),
@@ -62,7 +67,8 @@ export default async function HindiHomePage() {
       fetchHindiTrending(),
       fetchLanguageSwitchButton(),
       fetchHindiEmailSubscription(),
-      fetchContactByUID('bltbfc790959321e33f')
+      fetchContactByUID('bltbfc790959321e33f'),
+      fetchHindiNewUpdates()
     ]) as [
       GlobalSetting[],
       SidebarNews[],
@@ -74,7 +80,8 @@ export default async function HindiHomePage() {
       Trending[],
       LanguageSwitchButton | null,
       EmailSubscription | null,
-      Contact | null
+      Contact | null,
+      NewUpdate[]
     ];
 
     // Fallback language switch button data for Hindi
@@ -188,39 +195,51 @@ export default async function HindiHomePage() {
           <PersonalizedNewsWrapper locale="hi" newsChannelEntries={displayNewsChannelEntries} />
 
           {/* Three Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid-layout">
             
             {/* Left Column - News Channel */}
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-lg shadow p-4">
-                <NewsChannel 
-                  newsChannelEntries={displayNewsChannelEntries} 
-                  locale="hi" 
-                  key={`news-channel-${timestamp}`}
-                />
+            <div className="space-y-4">
+              {/* News Channel - Main News Content */}
+              <div className="card">
+                <div className="card-body">
+                  <NewsChannel 
+                    newsChannelEntries={displayNewsChannelEntries} 
+                    locale="hi" 
+                    key={`news-channel-${timestamp}`}
+                  />
+                </div>
+              </div>
+              
+              {/* New Updates */}
+              <div className="card">
+                <div className="card-body">
+                  <NewUpdateWidget newUpdates={newUpdates} locale="hi" />
+                </div>
               </div>
             </div>
 
             {/* Center Column - Main Content */}
-            <div className="lg:col-span-6">
-              <div className="space-y-4">
-                {/* Sidebar News */}
-                <div className="bg-white rounded-lg shadow p-4">
+            <div className="space-y-4">
+              {/* Sidebar News - Single Entry with Image */}
+              <div className="card">
+                <div className="card-body">
                   <Sidebar sidebarNews={displaySidebarNews} locale="hi" />
                 </div>
-                
-                {/* News Categories */}
-                <div className="bg-white rounded-lg shadow p-4">
+              </div>
+              
+              {/* News Categories - Below Latest News */}
+              <div className="card">
+                <div className="card-body">
                   <NewsCategories newsCategories={displayNewsCategories} locale="hi" />
                 </div>
               </div>
             </div>
 
             {/* Right Column - Updates */}
-            <div className="lg:col-span-3">
-              <div className="space-y-4">
-                {/* Live Updates */}
-                <div className="bg-white rounded-lg shadow p-4">
+            <div className="space-y-4">
+              {/* Live Updates */}
+              <div className="card">
+                <div className="card-body">
                   <LiveUpdates liveUpdates={displayLiveUpdates} authors={displayNewsAuthors} locale="hi" />
                 </div>
               </div>
@@ -229,140 +248,112 @@ export default async function HindiHomePage() {
 
         </main>
 
-        {/* Footer with Hindi content */}
-        <footer className="bg-gray-800 text-white mt-8">
-          <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="flex justify-between items-start">
-              
-              {/* Author Information */}
-              <div className="flex-1">
-                <h3 className="text-xl font-bold mb-4">हमारी टीम</h3>
+
+        
+        {/* Footer */}
+        <footer className="footer">
+          <div className="footer-content flex justify-between items-start">
+            
+            {/* Author Information */}
+            <div className="footer-section">
+              <h3>हमारी टीम</h3>
+              <div className="space-y-2">
                 {displayNewsAuthors && displayNewsAuthors.length > 0 ? (
-                  <div className="space-y-4">
-                    {displayNewsAuthors.slice(0, 3).map((author) => (
-                      <div key={author.uid} className="flex items-center space-x-3">
-                        {author.file ? (
-                          <Image 
-                            src={author.file.url} 
-                            alt={author.file.filename}
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                            <span className="text-white text-sm">👤</span>
-                          </div>
+                  displayNewsAuthors.map((author, index) => (
+                    <div key={author.uid || index} className="flex items-center space-x-3">
+                      {author.file && (
+                        <Image 
+                          src={author.file.url} 
+                          alt={author.file.filename}
+                          width={40}
+                          height={40}
+                          className="rounded-full"
+                        />
+                      )}
+                      <div>
+                        <p className="font-semibold">{translateToHindi(author.title, 'hi')}</p>
+                        {author.rich_text_editor && (
+                          <p className="text-sm text-gray-300">
+                            {translateToHindi(author.rich_text_editor.replace(/<[^>]*>/g, ''), 'hi')}
+                          </p>
                         )}
-                        <div>
-                          <div className="text-sm font-medium text-white">{translateToHindi(author.title, 'hi')}</div>
-                          {author.rich_text_editor && (
-                            <div className="text-xs text-gray-400 line-clamp-2">
-                              {translateToHindi(author.rich_text_editor.replace(/<[^>]*>/g, ''), 'hi')}
-                            </div>
-                          )}
-                        </div>
                       </div>
-                    ))}
-                    {displayNewsAuthors.length > 3 && (
-                      <div className="text-sm text-gray-400 mt-2">
-                        +{displayNewsAuthors.length - 3} और लेखक
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  ))
                 ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                        <span className="text-white text-sm">👤</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-white">राहुल शर्मा</div>
-                        <div className="text-xs text-gray-400">राजनीतिक संवाददाता</div>
-                      </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">AT</span>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                        <span className="text-white text-sm">👤</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-white">प्रिया वर्मा</div>
-                        <div className="text-xs text-gray-400">तकनीकी संपादक</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                        <span className="text-white text-sm">👤</span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-white">अमित कुमार</div>
-                        <div className="text-xs text-gray-400">खेल पत्रकार</div>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-400 mt-2">
-                      +2 और लेखक
+                    <div>
+                      <p className="font-semibold">मेरा चैनल सबसे तेज न्यूज़ टीम</p>
+                      <p className="text-sm text-gray-300">आपको नवीनतम समाचार और अपडेट लाने के लिए समर्पित</p>
                     </div>
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* Contact Information */}
-              <div className="text-right">
-                <h3 className="text-xl font-bold mb-4">संपर्क</h3>
-                <div className="space-y-3">
-                  {contactData ? (
-                    <>
-                      <h4 className="text-sm font-medium text-white">{contactData.title}</h4>
-                      {contactData.rich_text_editor && (
-                        <div className="text-xs text-gray-400" dangerouslySetInnerHTML={{ __html: contactData.rich_text_editor }} />
-                      )}
-                      {contactData.single_line && <p className="text-xs text-gray-400">{contactData.single_line}</p>}
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-end space-x-3">
-                        <div>
-                          <div className="text-sm font-medium text-white">ईमेल</div>
-                          <div className="text-xs text-gray-400">info@mychannelsabsetej.com</div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                          <span className="text-white text-xs">📧</span>
-                        </div>
+            {/* Contact Information */}
+            <div className="text-right">
+              <h3 className="text-xl font-bold mb-4">संपर्क करें</h3>
+              <div className="space-y-3">
+                {contactData ? (
+                  <>
+                    <h4 className="text-sm font-medium text-white">{contactData.title}</h4>
+                    {contactData.rich_text_editor && (
+                      <div className="text-xs text-gray-400" dangerouslySetInnerHTML={{ __html: contactData.rich_text_editor }} />
+                    )}
+                    {contactData.single_line && <p className="text-xs text-gray-400">{contactData.single_line}</p>}
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-end space-x-3">
+                      <div>
+                        <div className="text-sm font-medium text-white">ईमेल</div>
+                        <div className="text-xs text-gray-400">info@mychannelsabsetej.com</div>
                       </div>
-                      <div className="flex items-center justify-end space-x-3">
-                        <div>
-                          <div className="text-sm font-medium text-white">फोन</div>
-                          <div className="text-xs text-gray-400">+1 (888) 888-6786</div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
-                          <span className="text-white text-xs">📞</span>
-                        </div>
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                        <span className="text-white text-xs">📧</span>
                       </div>
-                      <div className="flex items-center justify-end space-x-3">
-                        <div>
-                          <div className="text-sm font-medium text-white">पता</div>
-                          <div className="text-xs text-gray-400">123 न्यूज़ स्ट्रीट, मीडिया सिटी</div>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                          <span className="text-white text-xs">📍</span>
-                        </div>
+                    </div>
+                    <div className="flex items-center justify-end space-x-3">
+                      <div>
+                        <div className="text-sm font-medium text-white">फोन</div>
+                        <div className="text-xs text-gray-400">+1 (888) 888-6786</div>
                       </div>
-                    </>
-                  )}
-                </div>
+                      <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
+                        <span className="text-white text-xs">📞</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-end space-x-3">
+                      <div>
+                        <div className="text-sm font-medium text-white">पता</div>
+                        <div className="text-xs text-gray-400">123 न्यूज़ स्ट्रीट, मीडिया सिटी</div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
+                        <span className="text-white text-xs">📍</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-
             </div>
+          </div>
+          
+          {/* Email Subscription */}
+          <div className="mt-8">
+            <EmailSubscriptionComponent emailSubscriptionData={emailSubscription} />
+          </div>
 
-            {/* Email Subscription */}
-            <div className="mt-8">
-              <EmailSubscriptionComponent emailSubscriptionData={emailSubscription} />
-            </div>
+          {/* Pathfora Triggers for Testing */}
+          <div className="mt-8">
+            <PathforaTriggers show={false} locale="hi" />
+          </div>
 
-            {/* Copyright */}
-            <div className="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-400">
-              <p>&copy; 2024 मेरा चैनल सबसे तेज। सर्वाधिकार सुरक्षित।</p>
-            </div>
+          {/* Copyright */}
+          <div className="border-t border-gray-700 mt-6 pt-6 text-center">
+            <p>&copy; 2024 मेरा चैनल सबसे तेज। सर्वाधिकार सुरक्षित।</p>
           </div>
         </footer>
       </div>

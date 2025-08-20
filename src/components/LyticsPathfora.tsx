@@ -76,8 +76,8 @@ export default function LyticsPathfora({
         target: []
       };
 
-      // 1. Anonymous Visitor Welcome Message - Show only once per language
-      if (config.anonymousMessage && !hasPopupBeenShown('welcome', locale)) {
+      // 1. Anonymous Visitor Welcome Message - Show on every visit
+      if (config.anonymousMessage) {
         const welcomeContent = getWelcomeContent(locale);
         const welcomeModule = new window.pathfora.Message({
           id: `news-welcome-message-${locale}`,
@@ -108,12 +108,11 @@ export default function LyticsPathfora({
           widgets: [welcomeModule]
         });
 
-        // Mark welcome popup as shown for this language
-        markPopupAsShown('welcome', locale);
+        // Note: Removed localStorage check to show popup on every visit
       }
 
-      // 2. Lead Capture for Newsletter Subscription - Show only once per language
-      if (config.leadCapture && !hasPopupBeenShown('newsletter', locale)) {
+      // 2. Lead Capture for Newsletter Subscription - Show on every visit
+      if (config.leadCapture) {
         const newsletterContent = getNewsletterContent(locale);
         const leadCaptureModule = new window.pathfora.Message({
           id: `newsletter-signup-${locale}`,
@@ -151,12 +150,11 @@ export default function LyticsPathfora({
           widgets: [leadCaptureModule]
         });
 
-        // Mark newsletter popup as shown for this language
-        markPopupAsShown('newsletter', locale);
+        // Note: Removed localStorage check to show popup on every visit
       }
 
-      // 3. Content Recommendations - Show only once per language
-      if (config.contentRecommendations && !hasPopupBeenShown('recommendations', locale)) {
+      // 3. Content Recommendations - Show on every visit
+      if (config.contentRecommendations) {
         const recommendationsContent = getRecommendationsContent(locale);
         const recommendationModule = new window.pathfora.Message({
           id: `content-recommendations-${locale}`,
@@ -187,8 +185,7 @@ export default function LyticsPathfora({
           widgets: [recommendationModule]
         });
 
-        // Mark recommendations popup as shown for this language
-        markPopupAsShown('recommendations', locale);
+        // Note: Removed localStorage check to show popup on every visit
       }
 
       // Initialize all widgets

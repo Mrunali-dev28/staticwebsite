@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePersonalize } from '@/lib/use-personalize';
+import { getAllVariantsWithFallback, fetchUSNewsEntry, fetchUSNewsEntryHindi, fetchMaharashtraNewsEntry, fetchMaharashtraNewsEntryHindi } from '@/lib/personalize-service';
+import { translateToHindi } from '@/lib/contentstack-helpers';
 
 interface NewsItem {
   uid: string;
@@ -22,103 +24,146 @@ interface PersonalizedNewsProps {
 }
 
 export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [] }: PersonalizedNewsProps) {
-  const [usNews, setUsNews] = useState<NewsItem | null>(null);
+  const [personalizedNews, setPersonalizedNews] = useState<NewsItem[]>([]);
+  const [isLoadingPersonalize, setIsLoadingPersonalize] = useState(true);
   
   // Use the proper VPN detection from usePersonalize hook
   const personalizeData = usePersonalize();
   const { city, region, isLoading, error } = personalizeData || {};
   
-  // Debug logging
-  console.log('🔍 PersonalizedNews - Current region:', region);
-  console.log('🔍 PersonalizedNews - Current city:', city);
-  console.log('🔍 PersonalizedNews - Is loading:', isLoading);
-  console.log('🔍 PersonalizedNews - Error:', error);
+  // TEMPORARY: Force US region for testing if URL parameter is present
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const forceUSParam = urlParams?.get('forceUS');
+  const effectiveRegion = forceUSParam === 'true' ? 'us' : region;
   
-  // Auto-detect VPN status and fetch US news when VPN is ON
+  // Fetch personalized content based on VPN status
   useEffect(() => {
-    const fetchUSNews = async () => {
-      console.log('🔍 fetchUSNews - Region:', region);
-      console.log('🔍 fetchUSNews - City:', city);
+    const fetchPersonalizedContent = async () => {
+      setIsLoadingPersonalize(true);
       
-      // If region is 'us', VPN is ON
-      if (region === 'us') {
-        console.log('🇺🇸 VPN DETECTED - ON (US Region)');
-        console.log('🔍 Current region:', region);
-        console.log('🔍 Current city:', city);
+      try {
+        // If effective region is null, use fallback to regular news (Pune news)
+        if (!effectiveRegion) {
+          const fallbackNews = newsChannelEntries.map(entry => ({
+            uid: entry.uid,
+            title: entry.title,
+            news: entry.news,
+            date: entry.date,
+            file: entry.file
+          }));
+          setPersonalizedNews(fallbackNews);
+          setIsLoadingPersonalize(false);
+          return;
+        }
         
-        // Use hardcoded US news instead of CMS fetch
-        setUsNews({
-          uid: 'blt35f13c9354f221a8',
-          title: locale === 'hi' ? 'न्यूयॉर्क कांग्रेसवुमन की ICE गाइडेंस ने संघीय कानून तोड़ा हो सकता है' : 'New York congresswoman\'s ICE guidance may have broken federal law',
-          news: {
-            description: locale === 'hi' 
-              ? 'न्यूयॉर्क कांग्रेसवुमन की ICE गाइडेंस ने संघीय कानून तोड़ा हो सकता है। यह सामग्री VPN के माध्यम से अमेरिकी स्थान से देखने पर दिखाई देती है।'
-              : 'Breaking news: New York congresswoman\'s ICE guidance may have broken federal law. This content is shown when accessing from US location via VPN.',
-            link: `/en/read-more/blt35f13c9354f221a8`
-          },
-          date: new Date().toISOString()
-        });
-      } else {
-        console.log('📍 VPN DETECTED - OFF (Non-US Region)');
-        console.log('🔍 Current region:', region);
-        console.log('🔍 Current city:', city);
+        if (effectiveRegion === 'us') {
+          // Fetch US news from Personalize variants
+          let usNewsVariant;
+          if (locale === 'hi') {
+            usNewsVariant = await fetchUSNewsEntryHindi();
+          } else {
+            usNewsVariant = await fetchUSNewsEntry();
+          }
+          
+          if (usNewsVariant) {
+            setPersonalizedNews([{
+              uid: usNewsVariant.id,
+              title: usNewsVariant.content.title,
+              news: {
+                description: usNewsVariant.content.description,
+                link: usNewsVariant.content.link
+              },
+              date: new Date().toISOString(),
+              file: usNewsVariant.content.image ? {
+                url: usNewsVariant.content.image
+              } : undefined
+            }]);
+          } else {
+            // No US news found from SDK, show fallback US news with Hindi translation
+            setPersonalizedNews([{
+              uid: 'us-news-fallback',
+              title: "New York congresswoman's ICE guidance may have broken federal law",
+              news: {
+                description: 'Breaking news: New York congresswoman\'s ICE guidance may have broken federal law. This content is shown when accessing from US location via VPN.',
+                link: `/en/read-more/us-news-fallback`
+              },
+              date: new Date().toISOString()
+            }]);
+          }
+        } else {
+          // Fetch Maharashtra news from Personalize variants
+          let maharashtraNewsVariant;
+          if (locale === 'hi') {
+            maharashtraNewsVariant = await fetchMaharashtraNewsEntryHindi();
+          } else {
+            maharashtraNewsVariant = await fetchMaharashtraNewsEntry();
+          }
+          
+          if (maharashtraNewsVariant) {
+            setPersonalizedNews([{
+              uid: maharashtraNewsVariant.id,
+              title: maharashtraNewsVariant.content.title,
+              news: {
+                description: maharashtraNewsVariant.content.description,
+                link: maharashtraNewsVariant.content.link
+              },
+              date: new Date().toISOString(),
+              file: maharashtraNewsVariant.content.image ? {
+                url: maharashtraNewsVariant.content.image
+              } : undefined
+            }]);
+          } else {
+            // Fallback to regular news channel entries (Pune news)
+            const puneNews = newsChannelEntries.map(entry => ({
+              uid: entry.uid,
+              title: entry.title,
+              news: entry.news,
+              date: entry.date,
+              file: entry.file
+            }));
+            
+            setPersonalizedNews(puneNews);
+          }
+        }
+      } catch (error) {
+        // Fallback to regular news
+        setPersonalizedNews(newsChannelEntries.map(entry => ({
+          uid: entry.uid,
+          title: entry.title,
+          news: entry.news,
+          date: entry.date,
+          file: entry.file
+        })));
+      } finally {
+        setIsLoadingPersonalize(false);
       }
     };
 
-    if (!isLoading && region) {
-      fetchUSNews();
+    if (!isLoading && effectiveRegion !== undefined) {
+      fetchPersonalizedContent();
+    } else if (!isLoading && effectiveRegion === null) {
+      // If region is null and not loading, use fallback
+      const fallbackNews = newsChannelEntries.map(entry => ({
+        uid: entry.uid,
+        title: entry.title,
+        news: entry.news,
+        date: entry.date,
+        file: entry.file
+      }));
+      setPersonalizedNews(fallbackNews);
+      setIsLoadingPersonalize(false);
     }
-  }, [region, city, isLoading, locale]);
-
-  // Show US news if VPN is ON (region === 'us'), otherwise show Pune news
-  const displayNews = region === 'us' && usNews ? [usNews] : newsChannelEntries.map(entry => ({
-    uid: entry.uid,
-    title: entry.title,
-    news: entry.news,
-    date: entry.date,
-    file: entry.file
-  }));
-
-  console.log('🔍 PersonalizedNews - Display news count:', displayNews.length);
-  console.log('🔍 PersonalizedNews - Is VPN ON:', region === 'us');
-  console.log('🔍 PersonalizedNews - US news available:', !!usNews);
-
-  // TEMPORARY: Force US news for testing if URL parameter is present
-  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const forceUSParam = urlParams?.get('forceUS');
-  
-  // If forceUS=true, always show US news, otherwise use VPN detection
-  const finalDisplayNews = forceUSParam === 'true' ? (usNews ? [usNews] : []) : displayNews;
-
-  // TEMPORARY: Hardcoded US news fallback to prevent monsoon news
-  const hardcodedUSNews = {
-    uid: 'blt35f13c9354f221a8',
-    title: locale === 'hi' ? 'न्यूयॉर्क कांग्रेसवुमन की ICE गाइडेंस ने संघीय कानून तोड़ा हो सकता है' : 'New York congresswoman\'s ICE guidance may have broken federal law',
-    news: {
-      description: locale === 'hi' 
-        ? 'न्यूयॉर्क कांग्रेसवुमन की ICE गाइडेंस ने संघीय कानून तोड़ा हो सकता है। यह सामग्री VPN के माध्यम से अमेरिकी स्थान से देखने पर दिखाई देती है।'
-        : 'Breaking news: New York congresswoman\'s ICE guidance may have broken federal law. This content is shown when accessing from US location via VPN.',
-      link: `/en/read-more/blt35f13c9354f221a8`
-    },
-    file: {
-      url: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=300&fit=crop',
-      filename: 'us-news.jpg'
-    },
-    date: new Date().toISOString()
-  };
-
-  // COMPLETELY REMOVE MONSOON NEWS - If forceUS=true, show ONLY US news
-  const newsToDisplay = forceUSParam === 'true' ? [hardcodedUSNews] : displayNews;
+  }, [effectiveRegion, city, isLoading, locale, newsChannelEntries]);
 
   const getLocationTitle = () => {
-    if (region === 'us') {
+    if (effectiveRegion === 'us') {
       return locale === 'hi' ? '🇺🇸 अमेरिका के लिए हाइलाइटेड समाचार (VPN ON)' : '🇺🇸 Highlighted News for US (VPN ON)';
     } else {
       return locale === 'hi' ? '📍 पुणे के लिए हाइलाइटेड समाचार (VPN OFF)' : '📍 Highlighted News for Pune (VPN OFF)';
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingPersonalize) {
     return (
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
         <div className="flex items-center justify-center py-4">
@@ -134,28 +179,21 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
       {/* Content based on whether we have news or not */}
-      {newsToDisplay.length > 0 ? (
-        /* Highlighted News from Variants and CMS */
+      {personalizedNews.length > 0 ? (
+        /* Highlighted News from Personalize Variants */
         <div className="space-y-3">
-          {newsToDisplay.slice(0, 2).map((item, index) => (
+          {personalizedNews.slice(0, 2).map((item, index) => (
             <div key={`${item.uid}_${index}`} className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
               <div className="flex items-start space-x-3">
-                {item.file?.url && (
-                  <img 
-                    src={item.file.url} 
-                    alt={item.title}
-                    className="w-16 h-16 object-cover rounded flex-shrink-0"
-                  />
-                )}
+                {/* Image removed - showing only text content */}
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-semibold text-gray-800 mb-1 line-clamp-2">
-                    {item.title}
+                    {translateToHindi(item.title, locale)}
                   </h4>
                   <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                    {item.news?.description?.replace(/<p>/g, '').replace(/<\/p>/g, '')}
+                    {translateToHindi(item.news?.description?.replace(/<p>/g, '').replace(/<\/p>/g, '') || '', locale)}
                   </p>
                   <div className="flex items-center justify-between">
-                    {/* No personalized news logic here as it's hardcoded */}
                     {item.date && (
                       <span className="text-xs text-gray-500">
                         {new Date(item.date).toLocaleDateString('en-GB', {

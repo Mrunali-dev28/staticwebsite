@@ -7,7 +7,8 @@ import deliverySDK, {
   LanguageSwitchButton,
   EmailSubscription,
   NewsCategory,
-  LiveUpdate
+  LiveUpdate,
+  NewUpdate
 } from './contentstack';
 
 // Helper functions for Contentstack SDK usage
@@ -310,41 +311,75 @@ export async function fetchContactByUID(uid: string): Promise<Contact | null> {
 
 export async function fetchTrending(): Promise<Trending[]> {
   try {
-    console.log('🔍 Fetching trending_bar from CMS...');
-    console.log('🔍 Using deliverySDK:', typeof deliverySDK);
-    console.log('🔍 Environment:', process.env.NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT || 'production');
-    
-    const response = await deliverySDK
-      .contentType('trending_bar')
-      .entry()
-      .includeEmbeddedItems()
-      .find();
-    
-    console.log('✅ Raw response:', response);
-    console.log('✅ Response entries:', response.entries);
-    console.log('✅ Trending data found in CMS:', response.entries?.length || 0, 'entries');
-    
-    // Log the actual response for debugging
-    if (response.entries && response.entries.length > 0) {
-      console.log('📋 Trending entries found:', response.entries.map((entry: any) => ({
-        uid: entry.uid,
-        title: entry.title,
-        modular_blocks_count: entry.modular_blocks?.length || 0
-      })));
-    } else {
-      console.log('❌ No trending entries found in response');
+    // First, try to fetch from trending_bar content type
+    try {
+      const response = await deliverySDK
+        .contentType('trending_bar')
+        .entry()
+        .includeEmbeddedItems()
+        .includeFallback()
+        .find();
+      
+      if (response.entries && response.entries.length > 0) {
+        // Process the trending entries to extract modular blocks
+        const processedEntries = response.entries.map((entry: any) => {
+          const trendingItems: any[] = [];
+          
+          if (entry.modular_blocks && Array.isArray(entry.modular_blocks as any[])) {
+            (entry.modular_blocks as any[]).forEach((block: any) => {
+              if (block.label) {
+                trendingItems.push({
+                  uid: entry.uid,
+                  title: entry.title,
+                  label: block.label.single_line,
+                  link: block.link?.link || '#',
+                  link_title: block.link?.title || block.label.single_line
+                });
+              }
+            });
+          }
+          
+          return {
+            ...entry,
+            trending_items: trendingItems
+          };
+        });
+        
+        return (processedEntries || []) as Trending[];
+      }
+    } catch (trendingBarError) {
+      // Silently ignore errors
     }
     
-    return (response.entries || []) as Trending[];
-  } catch (error: any) {
-    console.log('❌ Trending data not found in CMS, trying alternative content types...');
+    // Try to fetch the specific entry
+    try {
+      const specificEntry = await deliverySDK
+        .contentType('trending_bar')
+        .entry('blt0bcecbcc93c3b00e')
+        .includeEmbeddedItems()
+        .includeFallback()
+        .fetch();
+      
+      if (specificEntry) {
+        return [specificEntry] as Trending[];
+      }
+    } catch (specificError: any) {
+      // Silently ignore errors
+    }
     
-    // Try alternative content type names
-    const alternativeContentTypes = ['trending', 'trending_news', 'trending_content'];
+    // First, discover what content types are actually available
+    const availableContentTypes = await discoverContentTypes();
     
-    for (const contentType of alternativeContentTypes) {
+    // Look for trending content in news-related content types first
+    const newsContentTypes = availableContentTypes.filter(type => 
+      type.includes('news') || 
+      type.includes('article') || 
+      type.includes('post') ||
+      type.includes('content')
+    );
+    
+    for (const contentType of newsContentTypes) {
       try {
-        console.log(`🔍 Trying content type: ${contentType}`);
         const response = await deliverySDK
           .contentType(contentType)
           .entry()
@@ -352,20 +387,40 @@ export async function fetchTrending(): Promise<Trending[]> {
           .find();
         
         if (response.entries && response.entries.length > 0) {
-          console.log(`✅ Found trending data in ${contentType}:`, response.entries.length, 'entries');
-          return (response.entries || []) as Trending[];
+          // Filter entries that might be trending-related
+          const trendingEntries = response.entries.filter((entry: any) => {
+            const title = entry.title?.toLowerCase() || '';
+            const description = entry.description?.toLowerCase() || '';
+            const content = `${title} ${description}`;
+            
+            // Keywords that might indicate trending content
+            const trendingKeywords = [
+              'trending', 'popular', 'hot', 'viral', 'breaking', 
+              'latest', 'top', 'featured', 'highlighted', 'trend'
+            ];
+            
+            const hasTrendingKeyword = trendingKeywords.some(keyword => content.includes(keyword));
+            const hasTrendingField = entry.is_trending === true || 
+                                   entry.trending === true ||
+                                   entry.featured === true ||
+                                   entry.is_featured === true;
+            
+            return hasTrendingKeyword || hasTrendingField;
+          });
+          
+          if (trendingEntries.length > 0) {
+            return trendingEntries as Trending[];
+          }
         }
-      } catch (altError) {
-        console.log(`❌ ${contentType} not found:`, altError);
+      } catch (error) {
+        // Silently ignore errors
+        continue;
       }
     }
     
-    console.log('❌ No trending data found in any content type, returning empty array');
-    console.log('❌ Error details:', error?.message || 'Unknown error');
-    console.log('❌ Full error:', error);
-    console.log('❌ Error stack:', error?.stack);
+    return [] as Trending[];
     
-    // Return empty array instead of hardcoded fallback data
+  } catch (error) {
     return [] as Trending[];
   }
 }
@@ -373,15 +428,11 @@ export async function fetchTrending(): Promise<Trending[]> {
 // NEW: Function to fetch a specific trending entry by UID
 export async function fetchTrendingEntry(uid: string): Promise<Trending | null> {
   try {
-    console.log(`🔍 Fetching trending entry with UID: ${uid}`);
-    console.log('🔍 Environment:', process.env.NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT || 'production');
-    
     // Try different content types for the specific entry
     const contentTypes = ['trending_bar', 'trending', 'trending_news', 'trending_content'];
     
     for (const contentType of contentTypes) {
       try {
-        console.log(`🔍 Trying content type: ${contentType} for UID: ${uid}`);
         const response = await deliverySDK
           .contentType(contentType)
           .entry(uid)
@@ -389,17 +440,15 @@ export async function fetchTrendingEntry(uid: string): Promise<Trending | null> 
           .includeFallback()
           .fetch();
         
-        console.log(`✅ Found trending entry in ${contentType}:`, response);
         return response as Trending;
       } catch (error) {
-        console.log(`❌ Entry not found in ${contentType}:`, error);
+        // Silently ignore errors
+        continue;
       }
     }
     
-    console.log(`❌ Trending entry with UID ${uid} not found in any content type`);
     return null;
   } catch (error) {
-    console.log(`❌ Error fetching trending entry ${uid}:`, error);
     return null;
   }
 }
@@ -551,6 +600,195 @@ export async function fetchSidebarNews(): Promise<SidebarNews[]> {
     console.log('Sidebar news not found in CMS, using fallback data');
     return [];
   }
+}
+
+// NEW: Function to fetch a specific sidebar news entry by UID
+export async function fetchSidebarNewsByUID(uid: string): Promise<SidebarNews | null> {
+  try {
+    const response = await deliverySDK
+      .contentType('sidebar_news')
+      .entry(uid)
+      .includeEmbeddedItems()
+      .fetch();
+    return response as SidebarNews;
+  } catch {
+    console.log(`Sidebar news entry with UID ${uid} not found in CMS`);
+    return null;
+  }
+}
+
+// NEW: Function to fetch new_update content
+export async function fetchNewUpdates(): Promise<NewUpdate[]> {
+  try {
+    console.log('🔍 Fetching new_update from CMS...');
+    
+    // Try different locale options for English
+    const localeOptions = ['en-us', 'en', 'hi-in'];
+    
+    for (const locale of localeOptions) {
+      try {
+        console.log(`🔍 Trying locale: ${locale}`);
+        const response = await deliverySDK
+          .contentType('new_update')
+          .entry()
+          .locale(locale)
+          .includeEmbeddedItems()
+          .includeFallback()
+          .find();
+        
+        if (response.entries && response.entries.length > 0) {
+          console.log(`✅ New updates found in CMS with locale ${locale}:`, response.entries.length, 'entries');
+          console.log('✅ First new update entry:', response.entries[0]);
+          return (response.entries || []) as NewUpdate[];
+        }
+      } catch (localeError) {
+        console.log(`❌ Failed with locale ${locale}:`, localeError);
+        continue;
+      }
+    }
+    
+    // If no locale worked, try without locale specification
+    try {
+      console.log('🔍 Trying without locale specification...');
+      const response = await deliverySDK
+        .contentType('new_update')
+        .entry()
+        .includeEmbeddedItems()
+        .includeFallback()
+        .find();
+      
+      if (response.entries && response.entries.length > 0) {
+        console.log('✅ New updates found without locale specification:', response.entries.length, 'entries');
+        return (response.entries || []) as NewUpdate[];
+      }
+    } catch (fallbackError) {
+      console.log('❌ Failed without locale specification:', fallbackError);
+    }
+    
+    console.log('❌ No new updates found in any locale');
+    return [];
+  } catch (error) {
+    console.log('❌ New updates not found in CMS, using fallback data:', error);
+    return [];
+  }
+}
+
+// NEW: Function to fetch new_update content for Hindi
+export async function fetchHindiNewUpdates(): Promise<NewUpdate[]> {
+  try {
+    console.log('🔍 Fetching Hindi new_update from CMS...');
+    
+    // Try different locale options for Hindi
+    const localeOptions = ['hi-in', 'hi', 'en-us'];
+    
+    for (const locale of localeOptions) {
+      try {
+        console.log(`🔍 Trying locale: ${locale}`);
+        const response = await deliverySDK
+          .contentType('new_update')
+          .entry()
+          .locale(locale)
+          .includeEmbeddedItems()
+          .includeFallback()
+          .find();
+        
+        if (response.entries && response.entries.length > 0) {
+          console.log(`✅ Hindi new updates found in CMS with locale ${locale}:`, response.entries.length, 'entries');
+          console.log('✅ First Hindi new update entry:', response.entries[0]);
+          return (response.entries || []) as NewUpdate[];
+        }
+      } catch (localeError) {
+        console.log(`❌ Failed with locale ${locale}:`, localeError);
+        continue;
+      }
+    }
+    
+    // If no locale worked, try without locale specification
+    try {
+      console.log('🔍 Trying without locale specification...');
+      const response = await deliverySDK
+        .contentType('new_update')
+        .entry()
+        .includeEmbeddedItems()
+        .includeFallback()
+        .find();
+      
+      if (response.entries && response.entries.length > 0) {
+        console.log('✅ New updates found without locale specification:', response.entries.length, 'entries');
+        return (response.entries || []) as NewUpdate[];
+      }
+    } catch (fallbackError) {
+      console.log('❌ Failed without locale specification:', fallbackError);
+    }
+    
+    console.log('❌ No new updates found in any locale');
+    return [];
+  } catch (error) {
+    console.log('❌ Hindi new updates not found in CMS, using fallback data:', error);
+    return [];
+  }
+}
+
+// NEW: Function to fetch specific new_update entry by UID in Hindi
+export async function fetchHindiNewUpdateByUID(uid: string): Promise<NewUpdate | null> {
+  try {
+    console.log(`🔍 Fetching Hindi new_update entry with UID: ${uid}`);
+    
+    // Try different locale options for Hindi
+    const localeOptions = ['hi-in', 'hi', 'en-us'];
+    
+    for (const locale of localeOptions) {
+      try {
+        console.log(`🔍 Trying locale: ${locale} for UID: ${uid}`);
+        const response = await deliverySDK
+          .contentType('new_update')
+          .entry(uid)
+          .locale(locale)
+          .includeEmbeddedItems()
+          .includeFallback()
+          .fetch();
+        
+        if (response) {
+          console.log(`✅ Hindi new update entry found with locale ${locale}:`, response);
+          return response as NewUpdate;
+        }
+      } catch (localeError) {
+        console.log(`❌ Failed with locale ${locale} for UID ${uid}:`, localeError);
+        continue;
+      }
+    }
+    
+    // If no locale worked, try without locale specification
+    try {
+      console.log(`🔍 Trying without locale specification for UID: ${uid}`);
+      const response = await deliverySDK
+        .contentType('new_update')
+        .entry(uid)
+        .includeEmbeddedItems()
+        .includeFallback()
+        .fetch();
+      
+      if (response) {
+        console.log('✅ New update entry found without locale specification:', response);
+        return response as NewUpdate;
+      }
+    } catch (fallbackError) {
+      console.log('❌ Failed without locale specification:', fallbackError);
+    }
+    
+    console.log(`❌ No new update entry found for UID: ${uid}`);
+    return null;
+  } catch (error) {
+    console.log(`❌ Error fetching Hindi new update entry with UID ${uid}:`, error);
+    return null;
+  }
+}
+
+// NEW: Test function to fetch the specific "Back To Medieval Times" entry
+export async function fetchRahulGandhiHindiEntry(): Promise<NewUpdate | null> {
+  const uid = 'bltf07647e17365257d'; // UID from the build logs
+  console.log('🔍 Testing fetch for Rahul Gandhi Hindi entry...');
+  return await fetchHindiNewUpdateByUID(uid);
 }
 
 export async function fetchSidebarNewsItem(uid: string): Promise<SidebarNews | null> {
@@ -1132,6 +1370,113 @@ export async function fetchLocationSpecificNews(location: 'maharashtra' | 'delhi
   }
 }
 
+// NEW: Function to fetch US news from us_news content type
+export async function fetchUSNews(): Promise<any[]> {
+  try {
+    console.log('🔍 Fetching US news from us_news content type...');
+    const response = await deliverySDK
+      .contentType('us_news')
+      .entry()
+      .includeEmbeddedItems()
+      .includeFallback()
+      .find();
+    
+    console.log('✅ US news found in CMS:', response.entries?.length || 0, 'entries');
+    console.log('✅ US news entries:', response.entries?.map((entry: any) => ({
+      uid: entry.uid,
+      title: entry.title,
+      url: entry.url
+    })));
+    
+    return response.entries || [];
+  } catch (error) {
+    console.log('❌ US news not found in CMS, using fallback data');
+    console.log('Error details:', error);
+    return [];
+  }
+}
+
+// NEW: Function to fetch US news with Hindi locale support
+export async function fetchHindiUSNews(): Promise<any[]> {
+  try {
+    console.log('🔍 Fetching Hindi US news from us_news content type...');
+    
+    // Try different locale options for Hindi
+    const localeOptions = ['hi-in', 'hi', 'en-us', 'en'];
+    
+    for (const locale of localeOptions) {
+      try {
+        console.log(`🔍 Trying locale: ${locale} for us_news`);
+        const response = await deliverySDK
+          .contentType('us_news')
+          .entry()
+          .locale(locale)
+          .includeEmbeddedItems()
+          .includeFallback()
+          .find();
+        
+        if (response.entries && response.entries.length > 0) {
+          console.log(`✅ Hindi US news found in CMS with locale ${locale}:`, response.entries.length, 'entries');
+          console.log('✅ Hindi US news entries:', response.entries?.map((entry: any) => ({
+            uid: entry.uid,
+            title: entry.title,
+            url: entry.url
+          })));
+          return response.entries || [];
+        }
+      } catch (localeError) {
+        console.log(`❌ Failed with locale ${locale}:`, localeError);
+        continue;
+      }
+    }
+    
+    // If no locale worked, try without locale specification
+    try {
+      console.log('🔍 Trying without locale specification for us_news...');
+      const response = await deliverySDK
+        .contentType('us_news')
+        .entry()
+        .includeEmbeddedItems()
+        .includeFallback()
+        .find();
+      
+      if (response.entries && response.entries.length > 0) {
+        console.log('✅ US news found without locale specification:', response.entries.length, 'entries');
+        return response.entries || [];
+      }
+    } catch (fallbackError) {
+      console.log('❌ Failed without locale specification:', fallbackError);
+    }
+    
+    console.log('❌ No US news found in any locale');
+    return [];
+  } catch (error) {
+    console.log('❌ Hindi US news not found in CMS, using fallback data');
+    console.log('Error details:', error);
+    return [];
+  }
+}
+
+// NEW: Function to fetch specific US news entry by UID
+export async function fetchUSNewsByUID(uid: string): Promise<any | null> {
+  try {
+    console.log(`🔍 Fetching US news with UID: ${uid}`);
+    const response = await deliverySDK
+      .contentType('us_news')
+      .entry(uid)
+      .includeEmbeddedItems()
+      .includeFallback()
+      .fetch();
+    
+    console.log('✅ US news entry found:', response);
+    return response;
+  } catch (error) {
+    console.log(`❌ US news entry with UID ${uid} not found in CMS`);
+    console.log('Error details:', error);
+    return null;
+  }
+}
+
 // NEW: Function to fetch trending news for specific location
 export async function fetchLocationTrendingNews(location: 'maharashtra' | 'delhi' | 'us') {
   try {
@@ -1255,8 +1600,6 @@ export async function fetchLocationTrendingNews(location: 'maharashtra' | 'delhi
 // NEW: Function to discover all available content types
 export async function discoverContentTypes(): Promise<string[]> {
   try {
-    console.log('🔍 Discovering all available content types...');
-    
     // Common content type names to test
     const commonContentTypes = [
       'trending_bar',
@@ -1284,36 +1627,29 @@ export async function discoverContentTypes(): Promise<string[]> {
       'monsoon_news',
       'read_more_page',
       'go_to_politics',
-      'language_switch_button'
+      'language_switch_button',
+      'us_news'
     ];
     
     const availableContentTypes: string[] = [];
     
     for (const contentType of commonContentTypes) {
       try {
-        console.log(`🔍 Testing content type: ${contentType}`);
         const response = await deliverySDK
           .contentType(contentType)
           .entry()
           .limit(1)
           .find();
         
-        console.log(`✅ Content type ${contentType} exists with ${response.entries?.length || 0} entries`);
         availableContentTypes.push(contentType);
       } catch (error: any) {
-        const errorMessage = error?.message || '';
-        if (errorMessage.includes('not found') || errorMessage.includes('422')) {
-          console.log(`❌ Content type ${contentType} does not exist`);
-        } else {
-          console.log(`⚠️ Content type ${contentType} error:`, errorMessage);
-        }
+        // Silently ignore content types that don't exist
+        continue;
       }
     }
     
-    console.log(`✅ Available content types: ${availableContentTypes.join(', ')}`);
     return availableContentTypes;
   } catch (error) {
-    console.log('❌ Error discovering content types:', error);
     return [];
   }
 }
@@ -1321,14 +1657,11 @@ export async function discoverContentTypes(): Promise<string[]> {
 // NEW: Function to get trending-related content from any available content type
 export async function fetchTrendingFromAnySource(): Promise<Trending[]> {
   try {
-    console.log('🔍 Searching for trending content in all available content types...');
-    
     const availableContentTypes = await discoverContentTypes();
     const allTrendingData: Trending[] = [];
     
     for (const contentType of availableContentTypes) {
       try {
-        console.log(`🔍 Checking ${contentType} for trending content...`);
         const response = await deliverySDK
           .contentType(contentType)
           .entry()
@@ -1336,8 +1669,6 @@ export async function fetchTrendingFromAnySource(): Promise<Trending[]> {
           .find();
         
         if (response.entries && response.entries.length > 0) {
-          console.log(`✅ Found ${response.entries.length} entries in ${contentType}`);
-          
           // Filter entries that might be trending-related
           const trendingEntries = response.entries.filter((entry: any) => {
             const title = entry.title?.toLowerCase() || '';
@@ -1354,19 +1685,17 @@ export async function fetchTrendingFromAnySource(): Promise<Trending[]> {
           });
           
           if (trendingEntries.length > 0) {
-            console.log(`✅ Found ${trendingEntries.length} trending-related entries in ${contentType}`);
             allTrendingData.push(...trendingEntries as Trending[]);
           }
         }
       } catch (error) {
-        console.log(`❌ Error checking ${contentType}:`, error);
+        // Silently ignore errors
+        continue;
       }
     }
     
-    console.log(`✅ Total trending entries found: ${allTrendingData.length}`);
     return allTrendingData;
   } catch (error) {
-    console.log('❌ Error fetching trending from any source:', error);
     return [];
   }
 }
@@ -1481,6 +1810,7 @@ export async function debugContentstackEntry(uid: string) {
 export function translateToHindi(text: string, locale: string = 'en'): string {
   if (!text || locale !== 'hi') return text;
   
+  // First, try exact match translations
   const translations: Record<string, string> = {
     // Live Updates translations
     '"Story | The Illness of Poetry | StoryBox with Jamshed"': '"कहानी | कविता की बीमारी | स्टोरीबॉक्स विद जमशेद"',
@@ -1490,6 +1820,21 @@ export function translateToHindi(text: string, locale: string = 'en'): string {
     // Sidebar News translations
     '"Modi and Shah meet the President on the same day... Is there any connection with August 5?"': '"मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?"',
     'During the Monsoon Session, Prime Minister Narendra Modi and Home Minister Amit Shah met President Droupadi Murmu on the same day.': 'मानसून सत्र के दौरान, प्रधानमंत्री नरेंद्र मोदी और गृह मंत्री अमित शाह ने एक ही दिन राष्ट्रपति द्रौपदी मुर्मू से मुलाकात की।',
+    'Modi and Shah meet the President on the same day... Is there any connection with August 5?': 'मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?',
+    'During the Monsoon Session, Prime Minister': 'मानसून सत्र के दौरान, प्रधानमंत्री',
+    
+    // HTML content translations
+    '<strong>Modi and Shah meet the President on the same day... Is there any connection with August 5?</strong>': '<strong>मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?</strong>',
+    '<br/>During the Monsoon Session, Prime Minister Narendra Modi and Home Minister Amit Shah met President Droupadi Murmu on the same day.': '<br/>मानसून सत्र के दौरान, प्रधानमंत्री नरेंद्र मोदी और गृह मंत्री अमित शाह ने एक ही दिन राष्ट्रपति द्रौपदी मुर्मू से मुलाकात की।',
+    
+              // Additional PM Modi news translations
+          'PM Modi meets President Murmu in Rashtrapati Bhavan amid Bihar SIR stir in Parliament': 'बिहार एसआईआर हंगामे के बीच पीएम मोदी ने राष्ट्रपति भवन में राष्ट्रपति मुर्मू से मुलाकात की',
+          'The meeting also comes also came days after U.S. President Donald Trump announced 25% tariffs plus a penalty on exports from India': 'यह बैठक अमेरिकी राष्ट्रपति डोनाल्ड ट्रम्प द्वारा भारत से निर्यात पर 25% शुल्क और जुर्माने की घोषणा के कुछ दिन बाद हुई है',
+          // US News translations
+          "New York congresswoman's ICE guidance may have broken federal law": 'न्यूयॉर्क कांग्रेसवुमन की ICE गाइडेंस ने संघीय कानून तोड़ा हो सकता है',
+          'Breaking news: New York congresswoman\'s ICE guidance may have broken federal law. This content is shown when accessing from US location via VPN.': 'ब्रेकिंग न्यूज: न्यूयॉर्क कांग्रेसवुमन की ICE गाइडेंस ने संघीय कानून तोड़ा हो सकता है। यह सामग्री VPN के माध्यम से अमेरिकी स्थान से देखने पर दिखाई देती है।',
+          'Latest US news and updates': 'नवीनतम अमेरिकी समाचार और अपडेट',
+          'US News': 'अमेरिकी समाचार',
     
     // Author translations
     'Aarav Desai': 'आरव देसाई',
@@ -1506,11 +1851,31 @@ export function translateToHindi(text: string, locale: string = 'en'): string {
     'Monsoon Flood Alert': 'मानसून बाढ़ अलर्ट',
     '⚠️ Heavy rain warning issued for Mumbai and Pune. Stay indoors.': '⚠️ मुंबई और पुणे के लिए भारी बारिश की चेतावनी जारी। घर के अंदर रहें।',
     'और पढ़ें →': 'और पढ़ें →',
-    'सत्यापित': 'सत्यापित'
+    'सत्यापित': 'सत्यापित',
+    
+    // New Update translations
+    "Back To Medieval Times': Rahul Gandhi On Bill To Sack Arrested Ministers": "'मध्यकालीन समय में वापसी': गिरफ्तार मंत्रियों को बर्खास्त करने के बिल पर राहुल गांधी",
+    "Back To Medieval Times": "मध्यकालीन समय में वापसी",
+    "Rahul Gandhi On Bill To Sack Arrested Ministers": "गिरफ्तार मंत्रियों को बर्खास्त करने के बिल पर राहुल गांधी",
+    "New Update": "नया अपडेट",
+    "New": "नया",
+    "View →": "देखें →"
   };
   
+  // Try exact match first
   if (translations[text]) {
     return translations[text];
   }
-  return text;
+  
+  // If no exact match, try partial translations for HTML content
+  let translatedText = text;
+  
+  // Apply partial translations
+  Object.keys(translations).forEach(englishText => {
+    if (translatedText.includes(englishText)) {
+      translatedText = translatedText.replace(new RegExp(englishText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), translations[englishText]);
+    }
+  });
+  
+  return translatedText;
 }

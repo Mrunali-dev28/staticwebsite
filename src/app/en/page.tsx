@@ -10,20 +10,23 @@ import {
   fetchTrending,
   fetchLanguageSwitchButton,
   fetchEmailSubscription,
-  fetchContactByUID
+  fetchContactByUID,
+  fetchNewUpdates
 } from '@/lib/contentstack-helpers';
 import Image from 'next/image';
-import { GlobalSetting, SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton, EmailSubscription, Contact } from '@/lib/contentstack';
+import { GlobalSetting, SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton, EmailSubscription, Contact, NewUpdate } from '@/lib/contentstack';
 
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
+import NewUpdateWidget from '@/app/components/NewUpdate';
+
 import BreakingAlertComponent from '../components/BreakingAlert';
 import NewsCategories from '../components/NewsCategories';
 import LiveUpdates from '../components/LiveUpdates';
 import EmailSubscriptionComponent from '../components/EmailSubscription';
 import PersonalizedNewsWrapper from '../components/PersonalizedNewsWrapper';
 import PathforaTriggers from '../../components/PathforaTriggers';
-import RefreshButton from '../../components/RefreshButton';
+
 import NewsChannel from '../components/NewsChannel';
 
 interface NewsChannelEntry {
@@ -64,7 +67,8 @@ export default async function EnglishHomePage() {
       trendingData,
       languageSwitchButton,
       emailSubscription,
-      contactData
+      contactData,
+      newUpdates
     ] = await Promise.all([
       fetchGlobalSettings(), // Use English global settings
       fetchSidebarNews(), // Use English sidebar news
@@ -76,7 +80,8 @@ export default async function EnglishHomePage() {
       fetchTrending(), // Use English trending data
       fetchLanguageSwitchButton(),
       fetchEmailSubscription(),
-      fetchContactByUID('bltbfc790959321e33f')
+      fetchContactByUID('bltbfc790959321e33f'),
+      fetchNewUpdates()
     ]) as [
       GlobalSetting[],
       SidebarNews[],
@@ -88,7 +93,8 @@ export default async function EnglishHomePage() {
       Trending[],
       LanguageSwitchButton | null,
       EmailSubscription | null,
-      Contact | null
+      Contact | null,
+      NewUpdate[]
     ];
 
     // Debug news channel data
@@ -258,11 +264,18 @@ export default async function EnglishHomePage() {
                   />
                 </div>
               </div>
+              
+              {/* New Updates */}
+              <div className="card">
+                <div className="card-body">
+                  <NewUpdateWidget newUpdates={newUpdates} locale="en" />
+                </div>
+              </div>
             </div>
 
             {/* Center Column - Main Content */}
             <div className="space-y-4">
-              {/* Sidebar News */}
+              {/* Sidebar News - Single Entry with Image */}
               <div className="card">
                 <div className="card-body">
                   <Sidebar sidebarNews={sidebarNews} locale="en" />
@@ -290,8 +303,7 @@ export default async function EnglishHomePage() {
 
         </main>
 
-        {/* Refresh Button */}
-        <RefreshButton />
+
         
         {/* Footer */}
         <footer className="footer">
