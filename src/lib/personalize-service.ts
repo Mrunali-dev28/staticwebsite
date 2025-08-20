@@ -1,6 +1,11 @@
 // Personalize Service for fetching variant content - Dynamic Version
-const PERSONALIZE_BASE_URL = process.env.NEXT_PUBLIC_PERSONALISE_EDGE || 'https://personalize-edge.contentstack.com';
+const PERSONALIZE_BASE_URL = process.env.NEXT_PUBLIC_PERSONALISE_EDGE || 'https://personalize.contentstack.com';
 const PROJECT_UID = process.env.NEXT_PUBLIC_PERSONALISE_EDGE_PROJECT_UID;
+
+// Check if Personalize service is properly configured
+const isPersonalizeConfigured = () => {
+  return PROJECT_UID && PROJECT_UID !== '6891ff716f1a09b09e904b21'; // Check if it's not the default/placeholder value
+};
 
 export interface PersonalizeVariant {
   id: string;
@@ -27,7 +32,13 @@ export async function fetchPersonalizeManifest(): Promise<PersonalizeManifest | 
     console.log('🔍 Project UID:', PROJECT_UID);
     console.log('🔍 User UID:', currentUserUid);
     
-    // Try different manifest endpoints
+    // Check if Personalize service is properly configured
+    if (!isPersonalizeConfigured()) {
+      console.log('⚠️ Personalize service not properly configured, skipping manifest fetch');
+      return null;
+    }
+    
+    // Try different manifest endpoints with proper error handling
     const manifestEndpoints = [
       `${PERSONALIZE_BASE_URL}/manifest`,
       `${PERSONALIZE_BASE_URL}/experiences`,
@@ -53,7 +64,11 @@ export async function fetchPersonalizeManifest(): Promise<PersonalizeManifest | 
           headers['x-cs-personalize-user-uid'] = currentUserUid;
         }
 
-        const response = await fetch(endpoint, { headers });
+        const response = await fetch(endpoint, { 
+          headers,
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
 
         if (response.ok) {
           const manifest = await response.json();
@@ -61,20 +76,29 @@ export async function fetchPersonalizeManifest(): Promise<PersonalizeManifest | 
           return manifest;
         } else {
           console.log(`❌ Failed with endpoint ${endpoint}:`, response.status, response.statusText);
-          // Try to get the error response body
-          try {
-            const errorBody = await response.text();
-            console.error(`❌ Error response body from ${endpoint}:`, errorBody);
-          } catch (e) {
-            console.error(`❌ Could not read error response body from ${endpoint}`);
+          // Don't try to read error body for 400/404 errors to avoid additional requests
+          if (response.status !== 400 && response.status !== 404) {
+            try {
+              const errorBody = await response.text();
+              console.error(`❌ Error response body from ${endpoint}:`, errorBody);
+            } catch (e) {
+              console.error(`❌ Could not read error response body from ${endpoint}`);
+            }
           }
         }
-      } catch (error) {
-        console.log(`❌ Error with endpoint ${endpoint}:`, error);
+      } catch (error: any) {
+        // Handle network errors gracefully
+        if (error.name === 'AbortError') {
+          console.log(`⏰ Timeout with endpoint ${endpoint}`);
+        } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          console.log(`🌐 Network error with endpoint ${endpoint}:`, error.message);
+        } else {
+          console.log(`❌ Error with endpoint ${endpoint}:`, error.message);
+        }
       }
     }
 
-    console.log('❌ All manifest endpoints failed');
+    console.log('❌ All manifest endpoints failed, Personalize service may not be configured');
     return null;
   } catch (error) {
     console.error('❌ Error fetching manifest:', error);
@@ -89,6 +113,12 @@ export async function fetchVariantContent(
 ): Promise<PersonalizeVariant | null> {
   try {
     console.log(`🔍 Fetching variant content for experience ${experienceId}, variant ${variantId}...`);
+    
+    // Check if required environment variables are set
+    if (!PROJECT_UID) {
+      console.log('⚠️ Project UID not configured, skipping variant content fetch');
+      return null;
+    }
     
     // Try different endpoints for variant content based on Personalize Edge API
     const endpoints = [
@@ -107,6 +137,8 @@ export async function fetchVariantContent(
             'Content-Type': 'application/json',
             'x-project-uid': PROJECT_UID || '',
           },
+          // Add timeout to prevent hanging requests
+          signal: AbortSignal.timeout(10000) // 10 second timeout
         });
 
         if (response.ok) {
@@ -120,13 +152,29 @@ export async function fetchVariantContent(
           };
         } else {
           console.log(`❌ Failed with endpoint ${endpoint}:`, response.status);
+          // Don't try to read error body for 400/404 errors
+          if (response.status !== 400 && response.status !== 404) {
+            try {
+              const errorBody = await response.text();
+              console.error(`❌ Error response body from ${endpoint}:`, errorBody);
+            } catch (e) {
+              console.error(`❌ Could not read error response body from ${endpoint}`);
+            }
+          }
         }
-      } catch (error) {
-        console.log(`❌ Error with endpoint ${endpoint}:`, error);
+      } catch (error: any) {
+        // Handle network errors gracefully
+        if (error.name === 'AbortError') {
+          console.log(`⏰ Timeout with endpoint ${endpoint}`);
+        } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          console.log(`🌐 Network error with endpoint ${endpoint}:`, error.message);
+        } else {
+          console.log(`❌ Error with endpoint ${endpoint}:`, error.message);
+        }
       }
     }
 
-    console.log('❌ All endpoints failed for variant content');
+    console.log('❌ All endpoints failed for variant content, Personalize service may not be configured');
     return null;
   } catch (error) {
     console.error('❌ Error fetching variant content:', error);
@@ -138,9 +186,15 @@ export async function fetchVariantContent(
 let currentUserUid: string | null = null;
 
 // Set user's city and get personalized content
-export async function setUserCity(city: string): Promise<PersonalizeManifest | null> {
+export async function setUserCity(city: string | null | undefined): Promise<PersonalizeManifest | null> {
   try {
     console.log('🔍 setUserCity: Setting city to:', city);
+    
+    // Handle null/undefined city
+    if (!city) {
+      console.log('⚠️ setUserCity: City is null/undefined, using default');
+      city = 'pune'; // Default fallback
+    }
     
     // Generate a user UID based on city (for demo purposes)
     currentUserUid = `user_${city.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
@@ -150,41 +204,17 @@ export async function setUserCity(city: string): Promise<PersonalizeManifest | n
     const manifest = await fetchPersonalizeManifest();
     console.log('🔍 setUserCity: Manifest fetched:', manifest);
     
-    // If manifest fetch fails, return a fallback manifest
+    // If manifest fetch fails, return null
     if (!manifest) {
-      console.log('⚠️ Personalize manifest fetch failed, using fallback');
-      return {
-        activeVariants: {},
-        experiences: [
-          {
-            shortUid: 'us_news',
-            activeVariantShortUid: 'us_news_variant'
-          },
-          {
-            shortUid: 'maharashtra_news',
-            activeVariantShortUid: 'maharashtra_news_variant'
-          }
-        ]
-      };
+      console.log('⚠️ Personalize manifest fetch failed, returning null');
+      return null;
     }
     
     return manifest;
   } catch (error) {
     console.error('❌ setUserCity: Error:', error);
-    // Return fallback manifest even if there's an error
-    return {
-      activeVariants: {},
-      experiences: [
-        {
-          shortUid: 'us_news',
-          activeVariantShortUid: 'us_news_variant'
-        },
-        {
-          shortUid: 'maharashtra_news',
-          activeVariantShortUid: 'maharashtra_news_variant'
-        }
-      ]
-    };
+    // Return null instead of hardcoded fallback
+    return null;
   }
 }
 
@@ -517,12 +547,12 @@ export async function fetchUSNewsEntry(): Promise<PersonalizeVariant | null> {
         variantId: firstEntry.uid || 'us_news_default'
       };
     } else {
-      throw new Error('No US news entries found');
+      console.log('⚠️ No US news entries found in CMS');
+      return null; // Return null instead of hardcoded fallback
     }
   } catch (error) {
     console.error('❌ Error fetching US news entry:', error);
-    // Return null instead of hardcoded fallback - let the UI handle it
-    return null;
+    return null; // Return null instead of hardcoded fallback
   }
 }
 
@@ -556,12 +586,12 @@ export async function fetchUSNewsEntryHindi(): Promise<PersonalizeVariant | null
         variantId: firstEntry.uid || 'us_news_default'
       };
     } else {
-      throw new Error('No US news entries found');
+      console.log('⚠️ No US news entries found in CMS (Hindi)');
+      return null; // Return null instead of hardcoded fallback
     }
   } catch (error) {
     console.error('❌ Error fetching US news entry (Hindi):', error);
-    // Return null instead of hardcoded fallback - let the UI handle it
-    return null;
+    return null; // Return null instead of hardcoded fallback
   }
 } 
 

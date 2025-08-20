@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { fetchHindiReadMorePageByUID } from '@/lib/contentstack-helpers';
-import type { ReadMorePage as ReadMorePageType } from '@/lib/contentstack';
+import { fetchHindiReadMorePageByUID, fetchNewUpdateByUID } from '@/lib/contentstack-helpers';
+import type { ReadMorePage as ReadMorePageType, NewUpdate as NewUpdateType } from '@/lib/contentstack';
 
 interface ReadMorePageProps {
   params: Promise<{
@@ -12,8 +12,14 @@ interface ReadMorePageProps {
 export default async function ReadMorePage({ params }: ReadMorePageProps) {
   const { uid } = await params;
   
-  // Fetch the Hindi read more page content
-  const readMorePage = await fetchHindiReadMorePageByUID(uid) as ReadMorePageType | null;
+  // Try to fetch the Hindi read more page content first
+  let readMorePage = await fetchHindiReadMorePageByUID(uid) as ReadMorePageType | null;
+  let newUpdate = null;
+  
+  // If read more page not found, try to fetch as new update
+  if (!readMorePage) {
+    newUpdate = await fetchNewUpdateByUID(uid) as NewUpdateType | null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,14 +34,59 @@ export default async function ReadMorePage({ params }: ReadMorePageProps) {
             ← होम पर वापस जाएं
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {readMorePage?.title === 'Monsoon news' ? 'मानसून समाचार' : (readMorePage?.title || 'और पढ़ें पेज')}
+            {readMorePage?.title === 'Monsoon news' ? 'मानसून समाचार' : (readMorePage?.title || newUpdate?.title || 'और पढ़ें पेज')}
           </h1>
         </div>
 
         {/* Main Content */}
         <div className="bg-white rounded-lg shadow-lg p-8">
           
-          {/* Latest Updates */}
+          {/* New Update Content */}
+          {newUpdate && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4">नवीनतम अपडेट</h2>
+              
+              {/* Image */}
+              {newUpdate.file && newUpdate.file.url && (
+                <div className="mb-6">
+                  <img 
+                    src={newUpdate.file.url} 
+                    alt={newUpdate.file.filename || newUpdate.title}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+              
+              {/* Title */}
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                {newUpdate.title}
+              </h3>
+              
+              {/* Description */}
+              {newUpdate.description && (
+                <div 
+                  className="prose max-w-none text-gray-700 leading-relaxed mb-6"
+                  dangerouslySetInnerHTML={{ __html: newUpdate.description }}
+                />
+              )}
+              
+              {/* Rich Text Content */}
+              {newUpdate.rich_text_editor && (
+                <div 
+                  className="prose max-w-none text-gray-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: newUpdate.rich_text_editor }}
+                />
+              )}
+              
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-yellow-800 text-sm">
+                  <strong>नोट:</strong> यह सामग्री अभी अंग्रेजी में है। कृपया CMS में हिंदी में अनुवाद करें।
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {/* Latest Updates (for read more pages) */}
           {readMorePage?.latest_updates && (
             <div className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">नवीनतम अपडेट</h2>

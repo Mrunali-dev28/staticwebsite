@@ -132,33 +132,84 @@ export function usePersonalize(): PersonalizeData {
 
     const detectLocationByIP = async () => {
       try {
-        // Use IP-based geolocation as fallback
-        const response = await fetch('https://api.ipapi.com/api/check?access_key=YOUR_API_KEY');
+        // Use multiple IP geolocation services for better accuracy
+        const services = [
+          'https://ipapi.co/json/',
+          'https://ipinfo.io/json',
+          'http://ip-api.com/json'
+        ];
         
-        if (response.ok) {
-          const ipData = await response.json();
-          const city = ipData.city;
-          const country = ipData.country_name;
+        let ipData = null;
+        
+        for (const service of services) {
+          try {
+            console.log(`🔍 Trying IP geolocation service: ${service}`);
+            const response = await fetch(service, {
+              headers: {
+                'Accept': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              ipData = await response.json();
+              console.log(`✅ IP data received from ${service}:`, ipData);
+              break;
+            }
+          } catch (serviceError) {
+            console.log(`❌ Failed to fetch from ${service}:`, serviceError);
+            continue;
+          }
+        }
+        
+        if (ipData) {
+          const city = ipData.city || ipData.locality || null;
+          const country = ipData.country || ipData.countryCode || ipData.country_name || null;
+          const region = ipData.region || ipData.regionName || ipData.state || null;
+          const isp = ipData.isp || ipData.org || null;
           
-          console.log('🔍 IP-based location data:', { city, country, ipData });
+          console.log('🔍 IP-based location data:', { city, country, region, isp, ipData });
 
-          // Determine region based on country and city
-          let region: 'us' | 'delhi' | 'maharashtra' | null = null;
+          // Enhanced region detection
+          let detectedRegion: 'us' | 'delhi' | 'maharashtra' | null = null;
           
-          if (country === 'United States') {
-            region = 'us';
-          } else if (country === 'India') {
+          // Check for US location
+          if (country === 'US' || country === 'United States' || country === 'USA') {
+            detectedRegion = 'us';
+            console.log('🔍 US location detected from IP');
+          } else if (country === 'IN' || country === 'India') {
+            // Check for specific Indian cities
             if (city && (city.toLowerCase().includes('delhi') || city.toLowerCase().includes('new delhi'))) {
-              region = 'delhi';
+              detectedRegion = 'delhi';
+              console.log('🔍 Delhi location detected from IP');
             } else if (city && (city.toLowerCase().includes('pune') || city.toLowerCase().includes('mumbai') || city.toLowerCase().includes('maharashtra'))) {
-              region = 'maharashtra';
+              detectedRegion = 'maharashtra';
+              console.log('🔍 Maharashtra location detected from IP');
+            } else {
+              // Default to Maharashtra for other Indian cities
+              detectedRegion = 'maharashtra';
+              console.log('🔍 Defaulting to Maharashtra for Indian location');
+            }
+          }
+          
+          // VPN detection based on ISP
+          const isVPN = isp && [
+            'vpn', 'proxy', 'tunnel', 'nord', 'express', 'surfshark',
+            'cyberghost', 'private internet access', 'pia', 'windscribe'
+          ].some(keyword => isp.toLowerCase().includes(keyword));
+          
+          if (isVPN) {
+            console.log('🔍 VPN detected from ISP:', isp);
+            // If VPN is detected and we're in India, assume US location
+            if (detectedRegion === 'maharashtra' || detectedRegion === 'delhi') {
+              detectedRegion = 'us';
+              console.log('🔍 VPN detected, switching to US region');
             }
           }
 
           await setUserCity(city);
           setData({
             city,
-            region,
+            region: detectedRegion,
             isLoading: false,
             error: null
           });

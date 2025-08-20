@@ -10,7 +10,7 @@ interface SidebarNewsPageProps {
   }>;
 }
 
-export default async function SidebarNewsPage({ params }: SidebarNewsPageProps) {
+export default async function HindiSidebarNewsPage({ params }: SidebarNewsPageProps) {
   const { uid } = await params;
 
   try {
@@ -36,16 +36,7 @@ export default async function SidebarNewsPage({ params }: SidebarNewsPageProps) 
 
           {/* Main Content */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            {/* Image */}
-            {sidebarNewsEntry.file && sidebarNewsEntry.file.url && (
-              <div className="w-full h-96 relative">
-                <img
-                  src={sidebarNewsEntry.file.url}
-                  alt={sidebarNewsEntry.file.filename || sidebarNewsEntry.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+
 
             {/* Content */}
             <div className="p-6">
@@ -64,8 +55,6 @@ export default async function SidebarNewsPage({ params }: SidebarNewsPageProps) 
                   />
                 </div>
               )}
-
-
 
               {/* Action Buttons */}
               <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">

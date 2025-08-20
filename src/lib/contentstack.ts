@@ -121,6 +121,27 @@ export interface LiveUpdate {
   };
 }
 
+export interface NewUpdate {
+  uid: string;
+  title: string;
+  description?: string;
+  content?: string;
+  rich_text_editor?: string;
+  file?: {
+    url: string;
+    filename: string;
+  };
+  date?: string;
+  created_at?: string;
+  updated_at?: string;
+  publish_details?: {
+    time: string;
+    user: string;
+    environment: string;
+    locale: string;
+  };
+}
+
 export interface Contact {
   uid: string;
   title: string;

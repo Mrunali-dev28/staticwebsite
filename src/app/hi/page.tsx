@@ -4,7 +4,7 @@ import {
   fetchLanguageSwitchButton,
   fetchHindiNewsCategories,
   fetchHindiNewsAuthors,
-  fetchHindiSidebarNews,
+  fetchSidebarNewsWithFilter,
   fetchHindiBreakingAlerts,
   fetchHindiLiveUpdates,
   fetchHindiTrending,
@@ -13,7 +13,7 @@ import {
   fetchHindiGlobalSettings,
   fetchContactByUID,
   translateToHindi,
-  fetchHindiNewUpdates
+  fetchNewUpdates
 } from '@/lib/contentstack-helpers';
 import { SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, LiveUpdate, Trending, LanguageSwitchButton, EmailSubscription, GlobalSetting, Contact, NewUpdate } from '@/lib/contentstack';
 
@@ -58,7 +58,7 @@ export default async function HindiHomePage() {
       newUpdates
     ] = await Promise.all([
       fetchHindiGlobalSettings(),
-      fetchHindiSidebarNews(),
+      fetchSidebarNewsWithFilter(['blt54a9e6762def9a93']),
       fetchHindiBreakingAlerts(),
       fetchHindiNewsCategories(),
       fetchHindiNewsAuthors(),
@@ -68,7 +68,7 @@ export default async function HindiHomePage() {
       fetchLanguageSwitchButton(),
       fetchHindiEmailSubscription(),
       fetchContactByUID('bltbfc790959321e33f'),
-      fetchHindiNewUpdates()
+      fetchNewUpdates()
     ]) as [
       GlobalSetting[],
       SidebarNews[],

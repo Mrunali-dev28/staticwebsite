@@ -2,7 +2,7 @@
 import { 
   fetchAllNewsChannelEntries,
   fetchGlobalSettings,
-  fetchSidebarNews,
+  fetchSidebarNewsWithFilter,
   fetchBreakingAlerts,
   fetchNewsCategories,
   fetchNewsAuthors,
@@ -18,7 +18,7 @@ import { GlobalSetting, SidebarNews, BreakingAlert, NewsCategory, NewsAuthor, Li
 
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
-import NewUpdateWidget from '@/app/components/NewUpdate';
+
 
 import BreakingAlertComponent from '../components/BreakingAlert';
 import NewsCategories from '../components/NewsCategories';
@@ -27,7 +27,9 @@ import EmailSubscriptionComponent from '../components/EmailSubscription';
 import PersonalizedNewsWrapper from '../components/PersonalizedNewsWrapper';
 import PathforaTriggers from '../../components/PathforaTriggers';
 
+
 import NewsChannel from '../components/NewsChannel';
+import NewUpdateWidget from '../components/NewUpdate';
 
 interface NewsChannelEntry {
   title: string;
@@ -71,7 +73,7 @@ export default async function EnglishHomePage() {
       newUpdates
     ] = await Promise.all([
       fetchGlobalSettings(), // Use English global settings
-      fetchSidebarNews(), // Use English sidebar news
+      fetchSidebarNewsWithFilter(['blt54a9e6762def9a93']), // Use English sidebar news with filtering
       fetchBreakingAlerts(), // Use English breaking alerts
       fetchNewsCategories(), // Use English news categories
       fetchNewsAuthors(), // Use English news authors

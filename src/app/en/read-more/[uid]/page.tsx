@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { fetchReadMorePageByUID } from '@/lib/contentstack-helpers';
-import type { ReadMorePage as ReadMorePageType } from '@/lib/contentstack';
+import { fetchReadMorePageByUID, fetchNewUpdateByUID } from '@/lib/contentstack-helpers';
+import type { ReadMorePage as ReadMorePageType, NewUpdate as NewUpdateType } from '@/lib/contentstack';
 
 interface ReadMorePageProps {
   params: Promise<{
@@ -12,8 +12,14 @@ interface ReadMorePageProps {
 export default async function ReadMorePage({ params }: ReadMorePageProps) {
   const { uid } = await params;
   
-  // Fetch the read more page content
-  const readMorePage = await fetchReadMorePageByUID(uid) as ReadMorePageType | null;
+  // Try to fetch the read more page content first
+  let readMorePage = await fetchReadMorePageByUID(uid) as ReadMorePageType | null;
+  let newUpdate = null;
+  
+  // If read more page not found, try to fetch as new update
+  if (!readMorePage) {
+    newUpdate = await fetchNewUpdateByUID(uid) as NewUpdateType | null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,14 +34,53 @@ export default async function ReadMorePage({ params }: ReadMorePageProps) {
             ← Back to Home
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {readMorePage?.title || 'Read More Page'}
+            {readMorePage?.title || newUpdate?.title || 'Read More Page'}
           </h1>
         </div>
 
         {/* Main Content */}
         <div className="bg-white rounded-lg shadow-lg p-8">
           
-          {/* Latest Updates */}
+          {/* New Update Content */}
+          {newUpdate && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4">Latest Update</h2>
+              
+              {/* Image */}
+              {newUpdate.file && newUpdate.file.url && (
+                <div className="mb-6">
+                  <img 
+                    src={newUpdate.file.url} 
+                    alt={newUpdate.file.filename || newUpdate.title}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+              
+              {/* Title */}
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                {newUpdate.title}
+              </h3>
+              
+              {/* Description */}
+              {newUpdate.description && (
+                <div 
+                  className="prose max-w-none text-gray-700 leading-relaxed mb-6"
+                  dangerouslySetInnerHTML={{ __html: newUpdate.description }}
+                />
+              )}
+              
+              {/* Rich Text Content */}
+              {newUpdate.rich_text_editor && (
+                <div 
+                  className="prose max-w-none text-gray-700 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: newUpdate.rich_text_editor }}
+                />
+              )}
+            </div>
+          )}
+          
+          {/* Latest Updates (for read more pages) */}
           {readMorePage?.latest_updates && (
             <div className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">Latest Updates</h2>

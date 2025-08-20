@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePersonalize } from '@/lib/use-personalize';
 import { getAllVariantsWithFallback, fetchUSNewsEntry, fetchUSNewsEntryHindi, fetchMaharashtraNewsEntry, fetchMaharashtraNewsEntryHindi } from '@/lib/personalize-service';
+import { fetchUSNews, fetchHindiUSNews, fetchSpecificUSNewsEntry } from '@/lib/contentstack-helpers';
 import { translateToHindi } from '@/lib/contentstack-helpers';
 
 interface NewsItem {
@@ -27,6 +28,21 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
   const [personalizedNews, setPersonalizedNews] = useState<NewsItem[]>([]);
   const [isLoadingPersonalize, setIsLoadingPersonalize] = useState(true);
   
+  // Debug logging
+  console.log('🔍 PersonalizedNews Component Debug:');
+  console.log('  - Locale:', locale);
+  console.log('  - News Channel Entries Count:', newsChannelEntries?.length || 0);
+  console.log('  - First Entry Title:', newsChannelEntries?.[0]?.title || 'No entries');
+  console.log('  - First Entry Description:', newsChannelEntries?.[0]?.news?.description || 'No description');
+  
+  // Test translation function
+  if (locale === 'hi' && newsChannelEntries?.[0]?.title) {
+    const translatedTitle = translateToHindi(newsChannelEntries[0].title, locale);
+    console.log('  - Original Title:', newsChannelEntries[0].title);
+    console.log('  - Translated Title:', translatedTitle);
+    console.log('  - Translation Working:', translatedTitle !== newsChannelEntries[0].title);
+  }
+  
   // Use the proper VPN detection from usePersonalize hook
   const personalizeData = usePersonalize();
   const { city, region, isLoading, error } = personalizeData || {};
@@ -42,6 +58,106 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
       setIsLoadingPersonalize(true);
       
       try {
+        // Check if Personalize service is configured
+        const projectUid = process.env.NEXT_PUBLIC_PERSONALISE_EDGE_PROJECT_UID;
+        if (!projectUid || projectUid === '6891ff716f1a09b09e904b21') {
+          console.log('⚠️ Personalize service not properly configured, fetching US news directly from CMS');
+          
+          // If US region is detected, fetch real US news from CMS
+          if (effectiveRegion === 'us') {
+            console.log('🔍 US region detected, fetching US news from CMS');
+            try {
+              // Try to fetch the specific US news entry first
+              const specificEntryId = 'blte933ca60d09a6b6c';
+              const specificVariantId = 'csd7cbbc175c7a995f';
+              
+              console.log('🎯 Attempting to fetch specific US news entry...');
+              const specificEntry = await fetchSpecificUSNewsEntry(specificEntryId, specificVariantId);
+              
+              if (specificEntry) {
+                console.log('✅ Specific US news entry found, using it');
+                setPersonalizedNews([{
+                  uid: specificEntry.uid,
+                  title: specificEntry.title,
+                  news: {
+                    description: specificEntry.description || specificEntry.news?.description || '',
+                    link: specificEntry.link || specificEntry.news?.link || ''
+                  },
+                  date: specificEntry.date || specificEntry.created_at || new Date().toISOString(),
+                  file: specificEntry.file || specificEntry.featured_image ? {
+                    url: specificEntry.file?.url || specificEntry.featured_image?.url || ''
+                  } : undefined
+                }]);
+              } else {
+                console.log('⚠️ Specific entry not found, falling back to general US news');
+                // Fallback to general US news if specific entry not found
+                let usNewsEntries: any[] = [];
+                if (locale === 'hi') {
+                  usNewsEntries = await fetchHindiUSNews();
+                } else {
+                  usNewsEntries = await fetchUSNews();
+                }
+                
+                if (usNewsEntries && usNewsEntries.length > 0) {
+                  console.log('✅ US news found in CMS:', usNewsEntries.length, 'entries');
+                  const formattedNews = usNewsEntries.map(entry => ({
+                    uid: entry.uid,
+                    title: entry.title,
+                    news: {
+                      description: entry.description || entry.news?.description || '',
+                      link: entry.link || entry.news?.link || ''
+                    },
+                    date: entry.date || entry.created_at || new Date().toISOString(),
+                    file: entry.file || entry.featured_image ? {
+                      url: entry.file?.url || entry.featured_image?.url || ''
+                    } : undefined
+                  }));
+                  setPersonalizedNews(formattedNews);
+                } else {
+                  console.log('❌ No US news found in CMS, showing empty state');
+                  setPersonalizedNews([]);
+                }
+              }
+            } catch (cmsError) {
+              console.log('❌ Error fetching US news from CMS:', cmsError);
+              setPersonalizedNews([]);
+            }
+          } else {
+            // Use fallback to regular news when Personalize is not configured and not US region
+            let fallbackNews: any[] = [];
+            
+            if (locale === 'hi') {
+              // Show hardcoded Hindi content for Hindi locale
+              console.log('🔍 Showing hardcoded Hindi content...');
+              fallbackNews = [
+                {
+                  uid: 'hindi-news-1',
+                  title: 'पुणे में भारी बारिश: अलर्ट जारी',
+                  news: {
+                    description: 'आज पुणे में भारी बारिश हुई जिससे गंभीर जलभराव और ट्रैफिक जाम हो गया। नवीनतम मौसम अपडेट और अलर्ट प्राप्त करें।',
+                    link: '/hi/read-more/hindi-news-1'
+                  },
+                  date: new Date().toISOString()
+                },
+
+              ];
+            } else {
+              // Use English news channel entries for English locale
+              fallbackNews = newsChannelEntries.map(entry => ({
+                uid: entry.uid,
+                title: entry.title,
+                news: entry.news,
+                date: entry.date,
+                file: entry.file
+              }));
+            }
+            
+            setPersonalizedNews(fallbackNews);
+          }
+          setIsLoadingPersonalize(false);
+          return;
+        }
+        
         // If effective region is null, use fallback to regular news (Pune news)
         if (!effectiveRegion) {
           const fallbackNews = newsChannelEntries.map(entry => ({
@@ -57,12 +173,27 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
         }
         
         if (effectiveRegion === 'us') {
-          // Fetch US news from Personalize variants
-          let usNewsVariant;
-          if (locale === 'hi') {
-            usNewsVariant = await fetchUSNewsEntryHindi();
-          } else {
-            usNewsVariant = await fetchUSNewsEntry();
+          // Fetch US news from Personalize variants with timeout
+          let usNewsVariant: any = null;
+          try {
+            if (locale === 'hi') {
+              usNewsVariant = await Promise.race([
+                fetchUSNewsEntryHindi(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+              ]) as any;
+            } else {
+              usNewsVariant = await Promise.race([
+                fetchUSNewsEntry(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+              ]) as any;
+            }
+          } catch (timeoutError) {
+            console.log('⏰ Personalize API timeout, using fallback');
+            usNewsVariant = null;
           }
           
           if (usNewsVariant) {
@@ -79,24 +210,31 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
               } : undefined
             }]);
           } else {
-            // No US news found from SDK, show fallback US news with Hindi translation
-            setPersonalizedNews([{
-              uid: 'us-news-fallback',
-              title: "New York congresswoman's ICE guidance may have broken federal law",
-              news: {
-                description: 'Breaking news: New York congresswoman\'s ICE guidance may have broken federal law. This content is shown when accessing from US location via VPN.',
-                link: `/en/read-more/us-news-fallback`
-              },
-              date: new Date().toISOString()
-            }]);
+            // No US news found from CMS - show empty state
+            setPersonalizedNews([]);
           }
         } else {
-          // Fetch Maharashtra news from Personalize variants
-          let maharashtraNewsVariant;
-          if (locale === 'hi') {
-            maharashtraNewsVariant = await fetchMaharashtraNewsEntryHindi();
-          } else {
-            maharashtraNewsVariant = await fetchMaharashtraNewsEntry();
+          // Fetch Maharashtra news from Personalize variants with timeout
+          let maharashtraNewsVariant: any = null;
+          try {
+            if (locale === 'hi') {
+              maharashtraNewsVariant = await Promise.race([
+                fetchMaharashtraNewsEntryHindi(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+              ]) as any;
+            } else {
+              maharashtraNewsVariant = await Promise.race([
+                fetchMaharashtraNewsEntry(),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout')), 10000)
+                )
+              ]) as any;
+            }
+          } catch (timeoutError) {
+            console.log('⏰ Personalize API timeout, using fallback');
+            maharashtraNewsVariant = null;
           }
           
           if (maharashtraNewsVariant) {
@@ -113,16 +251,8 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
               } : undefined
             }]);
           } else {
-            // Fallback to regular news channel entries (Pune news)
-            const puneNews = newsChannelEntries.map(entry => ({
-              uid: entry.uid,
-              title: entry.title,
-              news: entry.news,
-              date: entry.date,
-              file: entry.file
-            }));
-            
-            setPersonalizedNews(puneNews);
+            // No Maharashtra news found from CMS - show empty state
+            setPersonalizedNews([]);
           }
         }
       } catch (error) {
@@ -165,7 +295,7 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
 
   if (isLoading || isLoadingPersonalize) {
     return (
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4 min-h-[200px]">
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600 text-sm">
@@ -177,7 +307,8 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
   }
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4 min-h-[200px]">
+      
       {/* Content based on whether we have news or not */}
       {personalizedNews.length > 0 ? (
         /* Highlighted News from Personalize Variants */
@@ -188,10 +319,10 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
                 {/* Image removed - showing only text content */}
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-semibold text-gray-800 mb-1 line-clamp-2">
-                    {translateToHindi(item.title, locale)}
+                    {item.title}
                   </h4>
                   <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                    {translateToHindi(item.news?.description?.replace(/<p>/g, '').replace(/<\/p>/g, '') || '', locale)}
+                    {item.news?.description?.replace(/<p>/g, '').replace(/<\/p>/g, '') || ''}
                   </p>
                   <div className="flex items-center justify-between">
                     {item.date && (
