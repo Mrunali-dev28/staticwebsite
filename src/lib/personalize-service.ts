@@ -1,10 +1,10 @@
 // Personalize Service for fetching variant content - Dynamic Version
-const PERSONALIZE_BASE_URL = process.env.NEXT_PUBLIC_PERSONALISE_EDGE || 'https://personalize.contentstack.com';
+const PERSONALIZE_BASE_URL = process.env.NEXT_PUBLIC_PERSONALISE_EDGE || 'https://personalize-edge.contentstack.com';
 const PROJECT_UID = process.env.NEXT_PUBLIC_PERSONALISE_EDGE_PROJECT_UID;
 
 // Check if Personalize service is properly configured
 const isPersonalizeConfigured = () => {
-  return PROJECT_UID && PROJECT_UID !== '6891ff716f1a09b09e904b21'; // Check if it's not the default/placeholder value
+  return PROJECT_UID && PROJECT_UID !== ''; // Temporarily allow any non-empty Project UID for testing
 };
 
 export interface PersonalizeVariant {
@@ -35,14 +35,16 @@ export async function fetchPersonalizeManifest(): Promise<PersonalizeManifest | 
     // Check if Personalize service is properly configured
     if (!isPersonalizeConfigured()) {
       console.log('⚠️ Personalize service not properly configured, skipping manifest fetch');
+      console.log('🔍 Debug - PROJECT_UID:', PROJECT_UID);
+      console.log('🔍 Debug - PERSONALIZE_BASE_URL:', PERSONALIZE_BASE_URL);
       return null;
     }
     
     // Try different manifest endpoints with proper error handling
     const manifestEndpoints = [
-      `${PERSONALIZE_BASE_URL}/manifest`,
       `${PERSONALIZE_BASE_URL}/experiences`,
-      `${PERSONALIZE_BASE_URL}/manifest/${PROJECT_UID}`,
+      `${PERSONALIZE_BASE_URL}/manifest`,
+      `${PERSONALIZE_BASE_URL}/experiences/${PROJECT_UID}`,
     ];
 
     for (const endpoint of manifestEndpoints) {
@@ -200,16 +202,30 @@ export async function setUserCity(city: string | null | undefined): Promise<Pers
     currentUserUid = `user_${city.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
     console.log('🔍 setUserCity: Generated user UID:', currentUserUid);
     
+    // Check if Personalize is configured before fetching manifest
+    console.log('🔍 setUserCity: Checking Personalize configuration...');
+    const isConfigured = isPersonalizeConfigured();
+    console.log('🔍 setUserCity: Personalize configured:', isConfigured);
+    console.log('🔍 setUserCity: PROJECT_UID:', PROJECT_UID);
+    console.log('🔍 setUserCity: PERSONALIZE_BASE_URL:', PERSONALIZE_BASE_URL);
+    
+    if (!isConfigured) {
+      console.log('⚠️ setUserCity: Personalize not configured, skipping manifest fetch');
+      return null;
+    }
+    
+    console.log('🔍 setUserCity: Personalize is configured, fetching manifest...');
     // Fetch manifest for this user/city
     const manifest = await fetchPersonalizeManifest();
     console.log('🔍 setUserCity: Manifest fetched:', manifest);
     
     // If manifest fetch fails, return null
     if (!manifest) {
-      console.log('⚠️ Personalize manifest fetch failed, returning null');
+      console.log('⚠️ setUserCity: Personalize manifest fetch failed, returning null');
       return null;
     }
     
+    console.log('✅ setUserCity: Successfully fetched manifest');
     return manifest;
   } catch (error) {
     console.error('❌ setUserCity: Error:', error);
@@ -281,6 +297,8 @@ export async function trackConversion(eventKey: string): Promise<void> {
 }
 
 // Set and update user attributes using Personalize Edge API
+// DISABLED: This function is causing 400 errors with Personalize Edge API
+/*
 export async function setUserAttributes(attributes: Record<string, any>): Promise<void> {
   try {
     console.log('🔍 setUserAttributes: Setting attributes:', attributes);
@@ -299,6 +317,7 @@ export async function setUserAttributes(attributes: Record<string, any>): Promis
     // Don't throw error, just log it and continue
   }
 }
+*/
 
 // Fetch specific entry from Contentstack dynamically
 export async function fetchVariantFromContentstack(entryId: string): Promise<PersonalizeVariant | null> {

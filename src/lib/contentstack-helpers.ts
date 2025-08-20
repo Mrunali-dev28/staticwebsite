@@ -1706,6 +1706,8 @@ export function translateToHindi(text: string, locale: string = 'en'): string {
     'Heavy rainfall lashed pune today causing severe waterlogging and traffic jams. Get the latest weather updates and alerts.': 'आज पुणे में भारी बारिश हुई जिससे गंभीर जलभराव और ट्रैफिक जाम हो गया। नवीनतम मौसम अपडेट और अलर्ट प्राप्त करें।',
     "'Back To Medieval Times': Rahul Gandhi On Bill To Sack Arrested": "'मध्यकालीन युग में वापस': गिरफ्तार किए गए बिल पर राहुल गांधी",
     "'Back To Medieval Times': Rahul Gandhi On Bill To Sack Arrested Ministers": "'मध्यकालीन युग में वापस': मंत्रियों को हटाने के बिल पर राहुल गांधी",
+    "Back To Medieval Times': Rahul Gandhi On Bill To Sack Arrested Ministers": "'मध्यकालीन युग में वापस': मंत्रियों को हटाने के बिल पर राहुल गांधी",
+    "New York congresswoman's ICE guidance may have broken federal law": "न्यूयॉर्क की कांग्रेसवुमन की ICE गाइडेंस ने संघीय कानून तोड़ा हो सकता है",
     
     // Sidebar News translations
     '"Modi and Shah meet the President on the same day... Is there any connection with August 5?"': '"मोदी और शाह ने एक ही दिन राष्ट्रपति से मुलाकात की... क्या 5 अगस्त से कोई संबंध है?"',

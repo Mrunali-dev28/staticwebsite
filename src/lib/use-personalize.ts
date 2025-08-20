@@ -11,6 +11,8 @@ interface PersonalizeData {
 }
 
 export function usePersonalize(): PersonalizeData {
+  console.log('🔍 usePersonalize: Hook initialized');
+  
   const [data, setData] = useState<PersonalizeData>({
     city: null,
     region: null,
@@ -20,6 +22,8 @@ export function usePersonalize(): PersonalizeData {
 
   useEffect(() => {
     const detectLocation = async () => {
+      console.log('🔍 usePersonalize: detectLocation started');
+      
       try {
         setData(prev => ({ ...prev, isLoading: true, error: null }));
 

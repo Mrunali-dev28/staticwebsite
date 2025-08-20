@@ -55,6 +55,10 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
   // Fetch personalized content based on VPN status
   useEffect(() => {
     const fetchPersonalizedContent = async () => {
+      console.log('🔍 PersonalizedNews: Starting to fetch personalized content...');
+      console.log('🔍 PersonalizedNews: Current state:', { city, region, effectiveRegion, isLoading, error, locale });
+      console.log('🔍 PersonalizedNews: Force US param:', forceUSParam);
+      
       setIsLoadingPersonalize(true);
       
       try {
@@ -126,31 +130,14 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
             // Use fallback to regular news when Personalize is not configured and not US region
             let fallbackNews: any[] = [];
             
-            if (locale === 'hi') {
-              // Show hardcoded Hindi content for Hindi locale
-              console.log('🔍 Showing hardcoded Hindi content...');
-              fallbackNews = [
-                {
-                  uid: 'hindi-news-1',
-                  title: 'पुणे में भारी बारिश: अलर्ट जारी',
-                  news: {
-                    description: 'आज पुणे में भारी बारिश हुई जिससे गंभीर जलभराव और ट्रैफिक जाम हो गया। नवीनतम मौसम अपडेट और अलर्ट प्राप्त करें।',
-                    link: '/hi/read-more/hindi-news-1'
-                  },
-                  date: new Date().toISOString()
-                },
-
-              ];
-            } else {
-              // Use English news channel entries for English locale
-              fallbackNews = newsChannelEntries.map(entry => ({
-                uid: entry.uid,
-                title: entry.title,
-                news: entry.news,
-                date: entry.date,
-                file: entry.file
-              }));
-            }
+            // Use news channel entries for both locales (no hardcoded content)
+            fallbackNews = newsChannelEntries.map(entry => ({
+              uid: entry.uid,
+              title: entry.title,
+              news: entry.news,
+              date: entry.date,
+              file: entry.file
+            }));
             
             setPersonalizedNews(fallbackNews);
           }
@@ -314,28 +301,41 @@ export default function PersonalizedNews({ locale = 'en', newsChannelEntries = [
         /* Highlighted News from Personalize Variants */
         <div className="space-y-3">
           {personalizedNews.slice(0, 2).map((item, index) => (
-            <div key={`${item.uid}_${index}`} className="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
-              <div className="flex items-start space-x-3">
-                {/* Image removed - showing only text content */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-gray-800 mb-1 line-clamp-2">
-                    {item.title}
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                    {item.news?.description?.replace(/<p>/g, '').replace(/<\/p>/g, '') || ''}
+            <div 
+              key={`${item.uid}_${index}`} 
+              className="!bg-red-500 !rounded-lg !p-4 !shadow-md !border-l-4 !border-blue-500 hover:!shadow-lg !transition-shadow !duration-200 !border-0 !border-r-0 !border-t-0 !border-b-0"
+              style={{
+                backgroundColor: 'red',
+                borderRadius: '0.5rem',
+                padding: '1rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                borderLeft: '4px solid #3b82f6',
+                borderTop: 'none',
+                borderRight: 'none',
+                borderBottom: 'none',
+                transition: 'box-shadow 0.2s ease-in-out'
+              }}
+            >
+              <div className="flex-1 min-w-0">
+                <h4 className="text-base font-bold text-yellow-400 mb-2 line-clamp-2 leading-tight" style={{ color: 'yellow', fontSize: '18px' }}>
+                  {locale === 'hi' ? translateToHindi(item.title, locale) : item.title}
+                </h4>
+                {item.news?.description && (
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                    {locale === 'hi' ? translateToHindi(item.news.description.replace(/<p>/g, '').replace(/<\/p>/g, '') || '', locale) : item.news.description.replace(/<p>/g, '').replace(/<\/p>/g, '') || ''}
                   </p>
+                )}
+                {item.date && (
                   <div className="flex items-center justify-between">
-                    {item.date && (
-                      <span className="text-xs text-gray-500">
-                        {new Date(item.date).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    )}
+                    <span className="text-xs text-gray-500 font-medium">
+                      {new Date(item.date).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                    </span>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           ))}
