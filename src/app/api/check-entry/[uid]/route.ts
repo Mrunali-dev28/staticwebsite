@@ -3,10 +3,10 @@ import { checkSpecificEntry } from '@/lib/contentstack-helpers';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { uid: string } }
+  { params }: { params: Promise<{ uid: string }> }
 ) {
   try {
-    const { uid } = params;
+    const { uid } = await params;
     
     if (!uid) {
       return NextResponse.json(

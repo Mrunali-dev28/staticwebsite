@@ -187,7 +187,7 @@ Each event includes:
 ## Configuration
 
 The Lytics configuration is set in the layout file with:
-- **Source URL**: `https://c.lytics.io/api/tag/${lyticsTagId}/latest.min.js`
+- **Source URL**: `https://c.lytics.io/api/tag/${lytthis url not working will it show in my stack i integreted lytics'icsTagId}/latest.min.js`
 - **Automatic Page Views**: Enabled
 - **Pathfora Integration**: Enabled
 - **Error Handling**: Built-in fallbacks

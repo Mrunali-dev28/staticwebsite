@@ -47,7 +47,8 @@ export default function TestUSNewsPage() {
 
     } catch (error) {
       console.error('❌ Test error:', error);
-      results.error = error;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      results.error = { message: errorMessage, originalError: error };
     }
 
     setTestResults(results);

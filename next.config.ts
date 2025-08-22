@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Standard Next.js build (no static export)
+  // Standard Next.js build (supports API routes)
   trailingSlash: false,
   images: {
     unoptimized: true,

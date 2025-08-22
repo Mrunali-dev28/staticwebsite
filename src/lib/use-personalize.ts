@@ -170,8 +170,9 @@ export function usePersonalize(): PersonalizeData {
           const country = ipData.country || ipData.countryCode || ipData.country_name || null;
           const region = ipData.region || ipData.regionName || ipData.state || null;
           const isp = ipData.isp || ipData.org || null;
+          const ip = ipData.ip || null;
           
-          console.log('🔍 IP-based location data:', { city, country, region, isp, ipData });
+          console.log('🔍 IP-based location data:', { city, country, region, isp, ip, ipData });
 
           // Enhanced region detection
           let detectedRegion: 'us' | 'delhi' | 'maharashtra' | null = null;
@@ -195,19 +196,22 @@ export function usePersonalize(): PersonalizeData {
             }
           }
           
-          // VPN detection based on ISP
-          const isVPN = isp && [
-            'vpn', 'proxy', 'tunnel', 'nord', 'express', 'surfshark',
-            'cyberghost', 'private internet access', 'pia', 'windscribe'
-          ].some(keyword => isp.toLowerCase().includes(keyword));
+          // Enhanced VPN detection
+          const isVPN = detectVPN(isp, ip, city, country);
           
           if (isVPN) {
-            console.log('🔍 VPN detected from ISP:', isp);
-            // If VPN is detected and we're in India, assume US location
-            if (detectedRegion === 'maharashtra' || detectedRegion === 'delhi') {
-              detectedRegion = 'us';
-              console.log('🔍 VPN detected, switching to US region');
-            }
+            console.log('🔍 VPN detected! Switching to US region for personalized content');
+            detectedRegion = 'us';
+            // Update city to a US city for better personalization
+            const usCity = city && (city.toLowerCase().includes('new york') || city.toLowerCase().includes('los angeles') || city.toLowerCase().includes('chicago')) ? city : 'New York';
+            await setUserCity(usCity);
+            setData({
+              city: usCity,
+              region: 'us',
+              isLoading: false,
+              error: null
+            });
+            return;
           }
 
           await setUserCity(city);
@@ -238,6 +242,48 @@ export function usePersonalize(): PersonalizeData {
           error: null
         });
       }
+    };
+
+    // Enhanced VPN detection function
+    const detectVPN = (isp: string | null, ip: string | null, city: string | null, country: string | null): boolean => {
+      if (!isp) return false;
+      
+      const ispLower = isp.toLowerCase();
+      
+      // Common VPN/Proxy service keywords
+      const vpnKeywords = [
+        'vpn', 'proxy', 'tunnel', 'nord', 'express', 'surfshark',
+        'cyberghost', 'private internet access', 'pia', 'windscribe',
+        'tunnelbear', 'hotspot shield', 'proton', 'mullvad', 'ivpn',
+        'perfect privacy', 'airvpn', 'hide.me', 'vpn.ac', 'vpnsecure',
+        'vpn unlimited', 'vpn gate', 'openvpn', 'wireguard', 'openconnect',
+        'strongvpn', 'ipvanish', 'purevpn', 'vpnbook', 'hidemyass',
+        'zenmate', 'browsec', 'betternet', 'opera vpn', 'hoxx vpn'
+      ];
+      
+      // Check if ISP contains VPN keywords
+      const hasVPNKeyword = vpnKeywords.some(keyword => ispLower.includes(keyword));
+      
+      // Additional VPN indicators
+      const suspiciousPatterns = [
+        // Datacenter IP ranges (common for VPNs)
+        ip && (ip.startsWith('104.') || ip.startsWith('107.') || ip.startsWith('108.')),
+        // Generic ISP names that often indicate VPN
+        ispLower.includes('datacenter') || ispLower.includes('hosting') || ispLower.includes('server'),
+        // Unusual city/country combinations
+        country === 'IN' && city && !['mumbai', 'delhi', 'pune', 'bangalore', 'chennai', 'hyderabad', 'kolkata'].some(indianCity => city.toLowerCase().includes(indianCity))
+      ];
+      
+      const hasSuspiciousPattern = suspiciousPatterns.some(pattern => pattern === true);
+      
+      console.log('🔍 VPN Detection Results:', {
+        isp,
+        hasVPNKeyword,
+        hasSuspiciousPattern,
+        isVPN: hasVPNKeyword || hasSuspiciousPattern
+      });
+      
+      return hasVPNKeyword || hasSuspiciousPattern;
     };
 
     detectLocation();

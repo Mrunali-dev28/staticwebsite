@@ -13,7 +13,7 @@ export default async function ReadMorePage({ params }: ReadMorePageProps) {
   const { uid } = await params;
   
   // Try to fetch the read more page content first
-  let readMorePage = await fetchReadMorePageByUID(uid) as ReadMorePageType | null;
+  const readMorePage = await fetchReadMorePageByUID(uid) as ReadMorePageType | null;
   let newUpdate = null;
   
   // If read more page not found, try to fetch as new update

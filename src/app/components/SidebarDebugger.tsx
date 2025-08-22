@@ -50,3 +50,5 @@ export default function SidebarDebugger({ sidebarNews }: SidebarDebuggerProps) {
     </div>
   );
 }
+
+

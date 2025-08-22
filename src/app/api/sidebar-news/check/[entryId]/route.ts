@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkSidebarNewsEntry } from '@/lib/contentstack-helpers';
+import { checkSpecificEntry } from '@/lib/contentstack-helpers';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { entryId: string } }
+  { params }: { params: Promise<{ entryId: string }> }
 ) {
   try {
-    const { entryId } = params;
+    const { entryId } = await params;
     
     if (!entryId) {
       return NextResponse.json(
@@ -15,22 +15,22 @@ export async function GET(
       );
     }
 
-    console.log(`🔍 API: Checking sidebar_news entry with ID: ${entryId}`);
+    console.log(`🔍 API: Checking sidebar news entry with ID: ${entryId}`);
     
-    const exists = await checkSidebarNewsEntry(entryId);
+    const result = await checkSpecificEntry(entryId);
     
-    if (exists) {
+    if (result.found) {
       return NextResponse.json({
         success: true,
-        message: `Entry ${entryId} exists in sidebar_news content type`,
-        exists: true
+        message: `Sidebar news entry found in content type: ${result.contentType}`,
+        data: result.data
       });
     } else {
       return NextResponse.json({
-        success: true,
-        message: `Entry ${entryId} does not exist in sidebar_news content type`,
-        exists: false
-      });
+        success: false,
+        message: `Sidebar news entry with ID ${entryId} not found in any content type`,
+        error: result.error
+      }, { status: 404 });
     }
   } catch (error) {
     console.error('❌ API Error:', error);

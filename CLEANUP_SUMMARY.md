@@ -124,3 +124,4 @@ find . -type d -not -path "./node_modules*" -not -path "./.next*" -not -path "./
 ```
 
 The project is now clean and well-organized! 🎉
+
